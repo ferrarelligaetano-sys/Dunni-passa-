@@ -41,9 +41,9 @@ body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'S
 
 /* ─── TABS ─── */
 #tabs{display:flex;background:var(--rd);flex-shrink:0;border-bottom:1px solid rgba(0,0,0,.1)}
-.tab{flex:1;padding:11px 4px 9px;text-align:center;color:rgba(255,255,255,.55);font-size:12px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;transition:all .18s;user-select:none;letter-spacing:.2px}
+.tab{flex:1;padding:13px 4px 11px;text-align:center;color:rgba(255,255,255,.55);font-size:14px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;transition:all .18s;user-select:none;letter-spacing:.2px}
 .tab.active{color:#fff;border-bottom-color:var(--g)}
-.tab .ticon{display:block;font-size:17px;margin-bottom:2px}
+.tab .ticon{display:block;font-size:20px;margin-bottom:3px}
 
 /* ─── DRAW BAR ─── */
 #draw-bar{background:#0f2d4a;color:#fff;padding:9px 12px;display:none;flex-shrink:0;gap:8px;align-items:center}
@@ -537,7 +537,7 @@ async function pubblicaFoto(){
 // SANTO
 function aggiUI(){
   const n=sConf.nome||'Il Santo';
-  document.getElementById('app-title').textContent=sConf.nome?'🎉 '+sConf.nome:'🎉 Dunni Passa';
+  // Il titolo rimane sempre "Dunni Passa"
   document.getElementById('leg-nome').textContent=n;
   document.getElementById('sr-nome').textContent=n;
   document.getElementById('sr-sub').textContent=sConf.foto?'Foto caricata ✓':'Emoji: '+sConf.emoji;
