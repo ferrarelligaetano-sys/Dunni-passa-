@@ -4,860 +4,790 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#8B1A1A">
-<title>Gangi in Festa</title>
+<meta name="mobile-web-app-capable" content="yes">
+<title>Dunni Passa</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <style>
-:root{--r:#8B1A1A;--rd:#6d1414;--rl:#fdf5f5;--gold:#FFD700;--green:#16a34a;--blue:#1d4ed8;--purple:#7c3aed;--rad:12px}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0ece6}
-#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
-#header{background:var(--r);color:white;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px;min-height:54px}
-#header-left{flex:1;min-width:0}
-#htitle{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#hsub{font-size:11px;opacity:.75;margin-top:1px}
-#header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
-#live-badge{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 9px;font-size:11px;display:none;align-items:center;gap:4px}
-.dot-live{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 1.5s infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-#fb-badge{font-size:10px;padding:3px 7px;border-radius:10px;font-weight:700;background:#fef9c3;color:#854d0e}
-#login-badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:700;cursor:pointer;border:none}
-.lb-out{background:rgba(255,255,255,.15);color:white}
-.lb-in{background:#dcfce7;color:#166534}
-#tabs{display:flex;background:var(--rd);flex-shrink:0}
-.tab{flex:1;padding:9px 4px;text-align:center;color:rgba(255,255,255,.6);font-size:12px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;user-select:none}
-.tab.active{color:white;border-bottom-color:var(--gold);background:rgba(255,255,255,.07)}
-#draw-bar{background:#1a3a5c;color:white;padding:7px 12px;display:none;flex-shrink:0;gap:8px;align-items:center}
-#draw-bar-info{flex:1;min-width:0}
-#draw-bar-info b{display:block;font-size:12px}
-#draw-pts-count{font-size:11px;opacity:.8}
-#draw-bar-btns{display:flex;gap:4px}
-#draw-bar-btns button{padding:6px 9px;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation}
-.db-undo{background:#f59e0b;color:white}.db-save{background:#22c55e;color:white}.db-cancel{background:#dc2626;color:white}
-#zoom-hint{background:#f59e0b;color:#7c2d12;padding:5px 12px;font-size:11px;font-weight:600;text-align:center;display:none;flex-shrink:0}
-#main-area{display:flex;flex:1;min-height:0;overflow:hidden}
-#map{flex:1;min-height:0;z-index:1}
-#panel{flex-shrink:0;background:white;border-top:2px solid var(--r);overflow-y:auto;max-height:46vh;width:100%}
-@media(min-width:768px){#panel{width:340px;max-height:none;border-top:none;border-left:2px solid var(--r)}}
-.psec{padding:12px 14px}
-.psec+.psec{border-top:1px solid #f0f0f0}
-#status-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.sdot{width:10px;height:10px;border-radius:50%;background:#ddd;flex-shrink:0;transition:background .3s}
-.sdot.live{background:#22c55e;animation:pulse 1.5s infinite}
-#status-text{font-size:13px;color:#555;font-weight:500}
-#distance-info{font-size:13px;font-weight:700;margin-bottom:5px;padding:6px 10px;border-radius:8px;background:var(--rl);display:none}
-.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:#777}
-.legend-item{display:flex;align-items:center;gap:3px}
-.ldot{width:9px;height:9px;border-radius:50%}
-#santo-box{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--rl);border:1.5px solid #e8d0d0;border-radius:var(--rad);margin-bottom:9px}
-#sb-img{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--r);display:none;flex-shrink:0}
-#sb-emoji{width:38px;height:38px;border-radius:50%;background:var(--r);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
-#sb-nome{font-size:13px;font-weight:700;color:var(--r)}
-#sb-sub{font-size:10px;color:#999;margin-top:1px}
-.edit-btn{background:#f0f0f0;border:none;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;color:#555;flex-shrink:0}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:9px}
-.ic{background:#f8f8f8;border-radius:8px;padding:6px 9px}
-.ic-l{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}
-.ic-v{font-size:11px;font-weight:700;color:#333}
-#route-badge{font-size:11px;color:var(--r);font-weight:600;text-align:center;padding:4px 8px;background:var(--rl);border-radius:8px;margin-bottom:7px}
-/* ORARI PARTENZA */
-#orari-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:9px 11px;margin-bottom:7px;display:none}
-#orari-box .ob-title{font-size:11px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px}
-.orari-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:3px}
-.orari-row:last-child{margin-bottom:0}
-.orari-label{color:#555}
-.orari-val{font-weight:700;color:#0369a1}
-.orari-val.effettivo{color:#16a34a}
-.orari-val.ritardo{color:#dc2626}
-.btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:10px 12px;border-radius:var(--rad);border:none;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:6px;touch-action:manipulation;transition:opacity .15s,transform .1s;-webkit-appearance:none}
-.btn:active{opacity:.85;transform:scale(.98)}
-.btn-primary{background:var(--r);color:white}
-.btn-danger{background:#dc2626;color:white}
-.btn-outline{background:white;color:var(--r);border:2px solid var(--r)}
-.btn-green{background:var(--green);color:white}
-.btn-blue{background:var(--blue);color:white}
-.btn-gray{background:#6b7280;color:white}
-.btn-orange{background:#ea580c;color:white}
-.btn-sm{font-size:12px;padding:8px 11px}
-#not-logged-box{background:#fff3cd;border:1px solid #ffc107;border-radius:var(--rad);padding:12px;text-align:center;margin-bottom:8px}
-#not-logged-box p{font-size:13px;color:#856404;margin-bottom:9px}
-.percorso-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1.5px solid #ede8e0;border-radius:var(--rad);margin-bottom:7px;background:white}
-.percorso-item.attivo{border-color:var(--r);background:var(--rl)}
-.pi-info{flex:1;min-width:0}
-.pi-name{font-size:12px;font-weight:700;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pi-meta{font-size:10px;color:#999;margin-top:1px}
-.pi-actions{display:flex;gap:4px;flex-shrink:0}
-.pi-btn{padding:6px 9px;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation}
-.pi-use{background:var(--r);color:white}.pi-del{background:#fee2e2;color:#dc2626}
-#share-box{background:#fff8e1;border:1px solid #fbbf24;border-radius:var(--rad);padding:10px;margin-top:7px;display:none;text-align:center}
-#share-box p{font-size:12px;color:#92400e;font-weight:700;margin-bottom:6px}
-#foto-cnt{background:#dc2626;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;margin-left:4px}
+:root{
+  --r:#8B1A1A;--rd:#6d1414;--rl:#fdf5f5;--g:#FFD700;
+  --green:#16a34a;--blue:#1d4ed8;--purple:#7c3aed;
+  --bg:#f5f0eb;--white:#fff;--border:#ede8e0;
+  --txt:#1a1a1a;--txt2:#666;--txt3:#999;
+  --h:env(safe-area-inset-top,0px);
+  --b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html{height:100%;overflow:hidden}
+body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;background:var(--bg);color:var(--txt)}
 
-/* ── CALENDARIO ── */
-#cal-panel .psec{padding:12px 14px}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.cal-header h3{font-size:15px;font-weight:700;color:var(--r)}
-.cal-nav{display:flex;gap:6px;align-items:center}
-.cal-nav button{background:none;border:1px solid #ddd;border-radius:7px;padding:4px 10px;font-size:13px;cursor:pointer;font-weight:600;color:var(--r)}
-#cal-month-label{font-size:13px;font-weight:700;color:#333;min-width:110px;text-align:center}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:10px}
-.cal-day-name{font-size:10px;color:#999;text-align:center;padding:3px 0;font-weight:600}
-.cal-day{border-radius:8px;padding:4px 2px;min-height:36px;text-align:center;position:relative;cursor:default;background:white;border:1px solid transparent}
-.cal-day .dn{font-size:12px;font-weight:500;color:#333;line-height:1}
-.cal-day.other-month .dn{color:#ccc}
-.cal-day.today{border-color:var(--r) !important}
-.cal-day.today .dn{color:var(--r);font-weight:700}
-.cal-day.has-event{background:var(--rl);border-color:#e8d0d0;cursor:pointer}
-.cal-day.has-event .dn{color:var(--r);font-weight:700}
-.cal-dot{width:5px;height:5px;border-radius:50%;background:var(--r);margin:2px auto 0}
-.cal-eventi{margin-top:8px}
-.cal-evento-card{border:1.5px solid #e8d0d0;border-radius:var(--rad);padding:10px 12px;margin-bottom:8px;background:white;cursor:pointer;transition:border-color .15s}
-.cal-evento-card:hover{border-color:var(--r)}
-.cal-evento-card.oggi{border-color:var(--r);background:var(--rl)}
-.cec-top{display:flex;align-items:flex-start;gap:8px}
-.cec-emoji{font-size:22px;flex-shrink:0}
-.cec-info{flex:1;min-width:0}
-.cec-nome{font-size:13px;font-weight:700;color:#222}
-.cec-data{font-size:11px;color:#888;margin-top:2px}
-.cec-orari{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
-.cec-orario{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
-.cec-previsto{background:#dbeafe;color:#1d4ed8}
-.cec-effettivo{background:#dcfce7;color:#166534}
-.cec-ritardo{background:#fee2e2;color:#dc2626}
-.cec-actions{display:flex;gap:5px;margin-top:8px}
-.cec-btn{padding:5px 10px;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation}
-.cec-attiva{background:var(--r);color:white}
-.cec-edit{background:#f0f0f0;color:#555}
-.cec-del{background:#fee2e2;color:#dc2626}
+/* ─── SHELL ─── */
+#shell{display:flex;flex-direction:column;height:100dvh;height:calc(var(--vh,1vh)*100)}
+#topbar{background:var(--r);padding:calc(var(--h) + 10px) 14px 10px;display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:54px}
+#topbar-left{flex:1;min-width:0}
+#app-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#app-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:1px}
+#topbar-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+#live-pill{background:rgba(255,255,255,.15);border-radius:20px;padding:4px 9px;font-size:11px;font-weight:700;color:#fff;display:none;align-items:center;gap:5px}
+.pulse{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 1.4s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+#fb-dot{width:8px;height:8px;border-radius:50%;background:#fbbf24;flex-shrink:0}
+#login-btn{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:12px;font-weight:700;padding:5px 11px;border-radius:20px;cursor:pointer;white-space:nowrap}
+#login-btn.in{background:#dcfce7;color:#166534}
 
-/* ── MODALI ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;display:flex;align-items:flex-end;justify-content:center}
-@media(min-width:768px){.modal-overlay{align-items:center}}
-.modal-box{background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:18px 16px 30px;max-height:92vh;overflow-y:auto}
-@media(min-width:768px){.modal-box{border-radius:20px;max-height:88vh}}
-.mhandle{width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px}
-@media(min-width:768px){.mhandle{display:none}}
-.modal-box h3{font-size:16px;color:var(--r);margin-bottom:13px;font-weight:700}
-.flabel{display:block;font-size:11px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin:12px 0 4px}
-.modal-box input[type=text],.modal-box input[type=password],.modal-box input[type=date],.modal-box input[type=time],.modal-box textarea,.modal-box select{width:100%;padding:11px 13px;border:1.5px solid #ddd;border-radius:10px;font-size:15px;font-family:inherit;-webkit-appearance:none}
-.modal-box input:focus,.modal-box textarea:focus,.modal-box select:focus{outline:none;border-color:var(--r)}
-.modal-box textarea{height:80px;resize:vertical}
-.modal-btns{display:flex;gap:8px;margin-top:14px}
-.modal-btns button{flex:1;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation}
-.mb-ok{background:var(--r);color:white}.mb-no{background:#f0f0f0;color:#555}
-#emoji-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}
-#emoji-grid div{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border:2px solid #e5e7eb;transition:all .15s;touch-action:manipulation}
-#img-preview-area{display:flex;align-items:center;gap:10px;padding:10px;background:#f8f8f8;border-radius:11px;border:1.5px dashed #ddd;margin-top:7px}
-#img-preview{width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid var(--r);display:none;flex-shrink:0}
-#img-placeholder{width:52px;height:52px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:24px;border:3px solid #ddd;flex-shrink:0}
-#img-upload-btn{background:var(--r);color:white;border:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:7px;display:block}
+/* ─── TABS ─── */
+#tabs{display:flex;background:var(--rd);flex-shrink:0;border-bottom:1px solid rgba(0,0,0,.1)}
+.tab{flex:1;padding:11px 4px 9px;text-align:center;color:rgba(255,255,255,.55);font-size:12px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;transition:all .18s;user-select:none;letter-spacing:.2px}
+.tab.active{color:#fff;border-bottom-color:var(--g)}
+.tab .ticon{display:block;font-size:17px;margin-bottom:2px}
+
+/* ─── DRAW BAR ─── */
+#draw-bar{background:#0f2d4a;color:#fff;padding:9px 12px;display:none;flex-shrink:0;gap:8px;align-items:center}
+#draw-bar b{font-size:13px;display:block;line-height:1.2}
+#dbar-count{font-size:11px;opacity:.75}
+#dbar-btns{display:flex;gap:5px;flex-shrink:0}
+#dbar-btns button{padding:7px 11px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.db-u{background:#f59e0b;color:#fff}.db-s{background:#22c55e;color:#fff}.db-x{background:#dc2626;color:#fff}
+#zoom-hint{background:#fbbf24;color:#7c2d12;padding:7px 14px;font-size:12px;font-weight:700;text-align:center;display:none;flex-shrink:0}
+
+/* ─── MAPPA + PANEL ─── */
+#body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+#map{flex:1;min-height:0}
+#panel{flex-shrink:0;background:var(--white);overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:44vh;border-top:2px solid var(--r)}
+
+/* ─── SEZIONI PANEL ─── */
+.sec{padding:13px 15px}
+.sec+.sec{border-top:1px solid var(--border)}
+
+/* FEDELI */
+#pub-status{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sdot{width:11px;height:11px;border-radius:50%;background:#ddd;flex-shrink:0;transition:background .3s}
+.sdot.live{background:#22c55e;animation:pulse 1.4s infinite}
+#status-text{font-size:14px;color:var(--txt2);font-weight:500;line-height:1.3}
+#dist-box{border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:14px;font-weight:700;display:none;background:var(--rl)}
+#orari-fedeli{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:9px 12px;margin-bottom:8px;display:none}
+#orari-fedeli .of-title{font-size:11px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+.of-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.of-row:last-child{margin-bottom:0}
+.of-label{color:var(--txt2)}.of-val{font-weight:700;color:#0369a1}
+.of-val.ok{color:var(--green)}.of-val.ko{color:#dc2626}
+.legend{display:flex;gap:9px;flex-wrap:wrap;font-size:11px;color:var(--txt3)}
+.li{display:flex;align-items:center;gap:3px}
+.ld{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+/* ADMIN */
+#not-logged{background:#fff3cd;border:1px solid #ffc107;border-radius:12px;padding:14px;text-align:center}
+#not-logged p{font-size:13px;color:#856404;margin-bottom:10px;line-height:1.4}
+#santo-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--rl);border:1.5px solid #e8d0d0;border-radius:12px;margin-bottom:10px}
+#sr-vis{width:40px;height:40px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--r);font-size:20px}
+#sr-vis img{width:100%;height:100%;object-fit:cover;display:none}
+#sr-nome{font-size:13px;font-weight:700;color:var(--r);margin-bottom:1px}
+#sr-sub{font-size:10px;color:var(--txt3)}
+.chip-btn{background:#f0f0f0;border:none;padding:6px 11px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;color:var(--txt2);touch-action:manipulation;flex-shrink:0}
+
+/* INFO GRID */
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.ic{background:#f8f8f8;border-radius:9px;padding:7px 10px}
+.icl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.icv{font-size:12px;font-weight:700;color:var(--txt);word-break:break-all}
+
+/* ORARI ADMIN */
+#orari-admin{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:9px 12px;margin-bottom:8px;display:none}
+#orari-admin .oa-title{font-size:11px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px}
+.oa-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.oa-label{color:var(--txt2)}.oa-val{font-weight:700;color:#0369a1}
+.oa-val.ok{color:var(--green)}.oa-val.ko{color:#dc2626}
+
+#route-chip{font-size:11px;color:var(--r);font-weight:600;text-align:center;padding:5px 10px;background:var(--rl);border-radius:8px;margin-bottom:8px}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 14px;border-radius:13px;border:none;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;touch-action:manipulation;-webkit-appearance:none;transition:opacity .12s,transform .08s}
+.btn:active{opacity:.82;transform:scale(.975)}
+.bp{background:var(--r);color:#fff}
+.bd{background:#dc2626;color:#fff}
+.bg{background:var(--green);color:#fff}
+.bb{background:var(--blue);color:#fff}
+.bo{background:var(--white);color:var(--r);border:2px solid var(--r)}
+.bgr{background:#6b7280;color:#fff}
+
+/* SHARE */
+#share-box{background:#fffbeb;border:1px solid #fbbf24;border-radius:12px;padding:11px;margin-top:9px;display:none;text-align:center}
+#share-box p{font-size:12px;color:#92400e;font-weight:700;margin-bottom:7px}
+
+/* FOTO BTN BADGE */
+#foto-btn-wrap{position:relative;margin-top:8px}
+#foto-cnt{position:absolute;top:-5px;right:-5px;background:#dc2626;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;z-index:10}
+
+/* PERCORSI */
+.pitem{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--border);border-radius:12px;margin-bottom:8px;background:var(--white)}
+.pitem.on{border-color:var(--r);background:var(--rl)}
+.pi{flex:1;min-width:0}
+.pin{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pim{font-size:10px;color:var(--txt3);margin-top:2px}
+.pbtns{display:flex;gap:5px;flex-shrink:0}
+.pbtn{padding:7px 10px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.pu{background:var(--r);color:#fff}.pdl{background:#fee2e2;color:#dc2626}
+
+/* ─── CALENDARIO ─── */
+#cal-wrap .sec{padding:12px 14px}
+.chead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.chead h3{font-size:15px;font-weight:800;color:var(--r)}
+.cnav{display:flex;align-items:center;gap:6px}
+.cnav button{background:var(--white);border:1.5px solid var(--border);border-radius:8px;padding:5px 11px;font-size:14px;cursor:pointer;font-weight:700;color:var(--r);touch-action:manipulation}
+#cal-ml{font-size:13px;font-weight:700;min-width:100px;text-align:center}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cdn{font-size:10px;color:var(--txt3);text-align:center;padding:3px 0;font-weight:700}
+.cd{border-radius:9px;padding:4px 2px;min-height:38px;text-align:center;background:var(--white);border:1.5px solid transparent;cursor:default;touch-action:manipulation}
+.cd .dn{font-size:13px;font-weight:500;line-height:1;color:var(--txt)}
+.cd.om .dn{color:#ccc}
+.cd.tod{border-color:var(--r) !important}
+.cd.tod .dn{color:var(--r);font-weight:800}
+.cd.hev{background:var(--rl);border-color:#e8d0d0;cursor:pointer}
+.cd.hev .dn{color:var(--r);font-weight:800}
+.cdot{width:5px;height:5px;border-radius:50%;background:var(--r);margin:3px auto 0}
+.evlist{margin-top:10px}
+.evcard{border:1.5px solid var(--border);border-radius:13px;padding:11px 13px;margin-bottom:9px;background:var(--white)}
+.evcard.oggi{border-color:var(--r);background:var(--rl)}
+.evtop{display:flex;gap:9px;align-items:flex-start}
+.evem{font-size:24px;flex-shrink:0}
+.evinfo{flex:1;min-width:0}
+.evnome{font-size:14px;font-weight:700;color:var(--txt)}
+.evdata{font-size:11px;color:var(--txt3);margin-top:2px;line-height:1.4}
+.evtags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.evtag{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+.et-prev{background:#dbeafe;color:#1d4ed8}
+.et-eff{background:#dcfce7;color:#16a34a}
+.et-rit{background:#fee2e2;color:#dc2626}
+.evacts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.eact{padding:7px 12px;border-radius:9px;border:none;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.ea-att{background:var(--r);color:#fff}
+.ea-ed{background:#f0f0f0;color:#555}
+.ea-del{background:#fee2e2;color:#dc2626}
+
+/* ─── MODALI ─── */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:8000;display:flex;align-items:flex-end;justify-content:center}
+.mbox{background:var(--white);border-radius:22px 22px 0 0;width:100%;max-width:520px;padding:0 16px calc(var(--b) + 24px);max-height:94dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.mbar{width:38px;height:4px;background:#ddd;border-radius:2px;margin:10px auto 14px}
+.mbox h3{font-size:17px;color:var(--r);margin-bottom:13px;font-weight:800}
+.fl{display:block;font-size:11px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:13px 0 5px}
+.mbox input[type=text],.mbox input[type=password],.mbox input[type=date],.mbox input[type=time],.mbox textarea,.mbox select{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:11px;font-size:16px;font-family:inherit;-webkit-appearance:none;background:var(--white);color:var(--txt)}
+.mbox input:focus,.mbox textarea:focus,.mbox select:focus{outline:none;border-color:var(--r)}
+.mbox textarea{height:80px;resize:none}
+.mbtns{display:flex;gap:8px;margin-top:14px}
+.mbtns button{flex:1;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.mok{background:var(--r);color:#fff}.mno{background:#f0f0f0;color:#555}
+#lerr{display:none;background:#fee2e2;color:#991b1b;border-radius:9px;padding:9px 12px;font-size:13px;margin-top:8px}
+.egrid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.egrid div{width:46px;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;border:2px solid var(--border);touch-action:manipulation}
+#fparea{display:flex;align-items:center;gap:11px;padding:11px;background:#f8f8f8;border-radius:12px;border:1.5px dashed var(--border);margin-top:8px}
+#fp-ph{width:54px;height:54px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:25px;border:3px solid var(--border);flex-shrink:0}
+#fp-img{width:54px;height:54px;border-radius:50%;object-fit:cover;border:3px solid var(--r);display:none;flex-shrink:0}
+#fp-btn{background:var(--r);color:#fff;border:none;padding:8px 13px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;margin-top:7px;display:block;touch-action:manipulation}
 input[type=file]{display:none}
-#foto-preview-area{margin-bottom:11px;text-align:center;display:none}
-#foto-preview-img{max-width:100%;max-height:200px;border-radius:11px;border:2px solid var(--r);object-fit:cover}
-.foto-upload-btn{width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation}
-.foto-popup img{width:170px;height:125px;object-fit:cover;border-radius:9px;display:block;cursor:pointer}
-.foto-popup p{font-size:11px;color:#555;margin-top:4px;line-height:1.4}
-#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:18px}
-#lightbox img{max-width:100%;max-height:80vh;border-radius:11px;object-fit:contain}
-#lightbox-caption{color:white;font-size:13px;opacity:.8;text-align:center;max-width:90vw}
-#lightbox-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.15);border:none;color:white;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-#login-err{display:none;background:#fee2e2;color:#991b1b;border-radius:8px;padding:7px 11px;font-size:12px;margin-top:7px}
-#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#222;color:white;padding:10px 20px;border-radius:22px;font-size:13px;display:none;z-index:9999;max-width:92vw;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+#foto-prev{display:none;margin-bottom:12px;text-align:center}
+#foto-prev img{max-width:100%;max-height:220px;border-radius:13px;border:2px solid var(--r);object-fit:cover}
+.foto-upload{width:100%;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:8px}
+.foto-popup img{width:175px;height:130px;object-fit:cover;border-radius:10px;display:block;cursor:pointer}
+.foto-popup p{font-size:11px;color:#555;margin-top:4px}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:9500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:18px}
+#lb img{max-width:100%;max-height:80dvh;border-radius:13px;object-fit:contain}
+#lb-cap{color:#fff;font-size:13px;opacity:.8;text-align:center;max-width:90vw}
+#lb-x{position:absolute;top:calc(var(--h) + 14px);right:14px;background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:42px;height:42px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#toast{position:fixed;bottom:calc(var(--b) + 80px);left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:11px 20px;border-radius:24px;font-size:14px;display:none;z-index:9999;max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.3)}
 </style>
 </head>
 <body>
-<div id="app">
-  <div id="header">
-    <div id="header-left">
-      <div id="htitle">Dunni passa?</div>
-      <div id="hsub">Gangi, Palermo</div>
-      <div id="hsub">Created and developed by Gaetano Ferrarelli</div>
+<div id="shell">
+  <div id="topbar">
+    <div id="topbar-left">
+      <div id="app-title">🎉 Dunni Passa</div>
+      <div id="app-sub">Gangi, Palermo</div>
     </div>
-    <div id="header-right">
-      <span id="fb-badge">🔥</span>
-      <button id="login-badge" class="lb-out" onclick="apriLogin()">🔐 Accedi</button>
-      <div id="live-badge"><div class="dot-live"></div>LIVE</div>
+    <div id="topbar-right">
+      <div id="fb-dot"></div>
+      <div id="live-pill"><div class="pulse"></div>LIVE</div>
+      <button id="login-btn" onclick="apriLogin()">🔐 Accedi</button>
     </div>
   </div>
 
   <div id="tabs">
-    <div class="tab active" onclick="switchTab('pubblico')">🙏 Fedeli</div>
-    <div class="tab" onclick="switchTab('admin')">⚙️ Organizza</div>
-    <div class="tab" onclick="switchTab('calendario')">📅 Calendario</div>
+    <div class="tab active" onclick="ST('pub')"><span class="ticon">🙏</span>Fedeli</div>
+    <div class="tab" onclick="ST('adm')"><span class="ticon">⚙️</span>Organizza</div>
+    <div class="tab" onclick="ST('cal')"><span class="ticon">📅</span>Calendario</div>
   </div>
 
   <div id="draw-bar">
-    <div id="draw-bar-info"><b>✏️ Disegno percorso</b><span id="draw-pts-count">Tocca la mappa</span></div>
-    <div id="draw-bar-btns">
-      <button class="db-undo" onclick="undoPunto()">↩</button>
-      <button class="db-save" onclick="chiediNomeESalva()">💾 Salva</button>
-      <button class="db-cancel" onclick="annullaDisegno()">✕</button>
+    <div style="flex:1;min-width:0"><b>✏️ Disegno percorso</b><span id="dbar-count">Tocca la mappa</span></div>
+    <div id="dbar-btns">
+      <button class="db-u" onclick="undoP()">↩</button>
+      <button class="db-s" onclick="chiediSalva()">💾 Salva</button>
+      <button class="db-x" onclick="annullaDisegno()">✕</button>
     </div>
   </div>
-  <div id="zoom-hint">🔍 Zooma sulla strada e tocca ogni punto del percorso</div>
+  <div id="zoom-hint">🔍 Zooma sulla strada, poi tocca ogni punto del percorso</div>
 
-  <div id="main-area">
+  <div id="body">
     <div id="map"></div>
     <div id="panel">
 
       <!-- FEDELI -->
-      <div id="pubblico-panel" class="psec">
-        <div id="status-bar">
-          <div class="sdot" id="pub-dot"></div>
-          <span id="status-text">In attesa della processione...</span>
+      <div id="pub-sec" class="sec">
+        <div id="pub-status"><div class="sdot" id="sdot"></div><span id="status-text">In attesa della processione...</span></div>
+        <div id="dist-box"></div>
+        <div id="orari-fedeli">
+          <div class="of-title">⏰ Orari</div>
+          <div class="of-row"><span class="of-label">Orario previsto</span><span class="of-val" id="of-prev">—</span></div>
+          <div class="of-row"><span class="of-label">Partita alle</span><span class="of-val ok" id="of-eff">—</span></div>
+          <div class="of-row" id="of-diff-row" style="display:none"><span class="of-label">Differenza</span><span class="of-val" id="of-diff">—</span></div>
         </div>
-        <div id="distance-info"></div>
         <div class="legend">
-          <div class="legend-item"><div class="ldot" style="background:var(--r)"></div><span id="legend-nome">Il Santo</span></div>
-          <div class="legend-item"><div class="ldot" style="background:#3b82f6"></div>Tu</div>
-          <div class="legend-item"><div class="ldot" style="background:#f59e0b"></div>Percorso</div>
-          <div class="legend-item"><div class="ldot" style="background:var(--purple)"></div>📸</div>
+          <div class="li"><div class="ld" style="background:var(--r)"></div><span id="leg-nome">Il Santo</span></div>
+          <div class="li"><div class="ld" style="background:#3b82f6"></div>Tu</div>
+          <div class="li"><div class="ld" style="background:#f59e0b"></div>Percorso</div>
+          <div class="li"><div class="ld" style="background:var(--purple)"></div>📸 Foto</div>
         </div>
       </div>
 
       <!-- ADMIN -->
-      <div id="admin-panel" class="psec" style="display:none">
-        <div id="not-logged-box">
-          <p>🔐 Accedi come organizzatore</p>
-          <button class="btn btn-primary btn-sm" onclick="apriLogin()" style="width:auto;padding:8px 18px">Accedi</button>
-        </div>
-        <div id="admin-controls" style="display:none">
-          <div id="santo-box">
-            <div id="sb-emoji">👑</div>
-            <img id="sb-img" src="" alt="">
-            <div style="flex:1;min-width:0"><div id="sb-nome">Configura il Santo</div><div id="sb-sub">Tocca ✏️</div></div>
-            <button class="edit-btn" onclick="apriModalSanto()">✏️</button>
+      <div id="adm-sec" class="sec" style="display:none">
+        <div id="not-logged"><p>🔐 Accedi come organizzatore per gestire la processione</p><button class="btn bp" onclick="apriLogin()" style="width:auto;padding:10px 22px;margin:0 auto;display:flex">Accedi ora</button></div>
+        <div id="adm-ctrl" style="display:none">
+          <div id="santo-row">
+            <div id="sr-vis">👑<img id="sr-img" src="" alt=""></div>
+            <div style="flex:1;min-width:0"><div id="sr-nome">Configura il Santo</div><div id="sr-sub">Tocca ✏️ per impostare</div></div>
+            <button class="chip-btn" onclick="apriSanto()">✏️</button>
           </div>
-          <div class="info-grid">
-            <div class="ic"><div class="ic-l">Stato</div><div class="ic-v" id="admin-stato">⚫ Inattivo</div></div>
-            <div class="ic"><div class="ic-l">Aggiornato</div><div class="ic-v" id="admin-time">—</div></div>
-            <div class="ic" style="grid-column:1/-1"><div class="ic-l">GPS</div><div class="ic-v" id="admin-pos">—</div></div>
+          <div class="igrid">
+            <div class="ic"><div class="icl">Stato</div><div class="icv" id="a-stato">⚫ Inattivo</div></div>
+            <div class="ic"><div class="icl">Aggiornato</div><div class="icv" id="a-time">—</div></div>
+            <div class="ic" style="grid-column:1/-1"><div class="icl">GPS</div><div class="icv" id="a-pos">—</div></div>
           </div>
-          <!-- ORARI -->
-          <div id="orari-box">
-            <div class="ob-title">⏰ Orari processione</div>
-            <div class="orari-row"><span class="orari-label">Prevista alle</span><span class="orari-val" id="orario-previsto">—</span></div>
-            <div class="orari-row"><span class="orari-label">Partita alle</span><span class="orari-val effettivo" id="orario-effettivo">—</span></div>
-            <div class="orari-row" id="ritardo-row" style="display:none"><span class="orari-label">Differenza</span><span class="orari-val ritardo" id="orario-diff">—</span></div>
+          <div id="orari-admin">
+            <div class="oa-title">⏰ Orari processione</div>
+            <div class="oa-row"><span class="oa-label">Prevista alle</span><span class="oa-val" id="oa-prev">—</span></div>
+            <div class="oa-row"><span class="oa-label">Partita alle</span><span class="oa-val ok" id="oa-eff">—</span></div>
+            <div class="oa-row" id="oa-diff-row" style="display:none"><span class="oa-label">Differenza</span><span class="oa-val" id="oa-diff">—</span></div>
           </div>
-          <div id="route-badge">Nessun percorso selezionato</div>
-          <button class="btn btn-primary" id="tracking-btn" onclick="toggleTracking()">▶ Avvia Tracking</button>
-          <button class="btn btn-blue" id="foto-live-btn" onclick="apriScattaFoto()" style="display:none">
-            📸 Scatta foto in diretta <span id="foto-cnt"></span>
-          </button>
-          <button class="btn btn-green" onclick="iniziaDisegno()">✏️ Disegna percorso</button>
-          <button class="btn btn-outline" onclick="apriListaPercorsi()">📋 Percorsi salvati</button>
+          <div id="route-chip">Nessun percorso selezionato</div>
+          <button class="btn bp" id="trk-btn" onclick="toggleTracking()">▶ Avvia Tracking</button>
+          <div id="foto-btn-wrap" style="display:none">
+            <button class="btn bb" onclick="apriFoto()">📸 Scatta foto in diretta</button>
+            <div id="foto-cnt"></div>
+          </div>
+          <button class="btn bg" onclick="iniziaDisegno()">✏️ Disegna percorso</button>
+          <button class="btn bo" onclick="apriListaPercorsi()">📋 Percorsi salvati</button>
           <div id="share-box">
             <p>📲 Condividi con i fedeli</p>
-            <img id="qr-img" width="115" height="115" src="" alt="QR" style="border-radius:8px;border:1px solid #ddd">
-            <button class="btn btn-outline btn-sm" onclick="copiaLink()">📋 Copia link</button>
+            <img id="qr-img" width="120" height="120" src="" alt="QR" style="border-radius:10px;border:1px solid var(--border)">
+            <button class="btn bo" onclick="copiaLink()" style="margin-top:7px;font-size:13px">📋 Copia link</button>
           </div>
         </div>
       </div>
 
       <!-- LISTA PERCORSI -->
-      <div id="lista-panel" class="psec" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-size:14px;font-weight:700;color:var(--r)">📋 Percorsi salvati</span>
-          <button onclick="tornaAdmin()" style="background:none;border:none;font-size:17px;cursor:pointer;color:#888;padding:4px">✕</button>
+      <div id="lst-sec" class="sec" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:15px;font-weight:800;color:var(--r)">📋 Percorsi salvati</span>
+          <button onclick="tornaAdm()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txt3);padding:4px">✕</button>
         </div>
-        <div id="lista-content"></div>
-        <button class="btn btn-green" onclick="tornaAdmin();iniziaDisegno()">✏️ + Nuovo percorso</button>
+        <div id="lst-content"></div>
+        <button class="btn bg" onclick="tornaAdm();iniziaDisegno()">✏️ + Nuovo percorso</button>
       </div>
 
       <!-- CALENDARIO -->
-      <div id="cal-panel" style="display:none">
-        <div class="psec">
-          <div class="cal-header">
-            <h3>📅 Processioni <span id="cal-year"></span></h3>
-            <div class="cal-nav">
-              <button onclick="cambiaMe(-1)">‹</button>
-              <span id="cal-month-label"></span>
-              <button onclick="cambiaMe(1)">›</button>
+      <div id="cal-wrap" style="display:none">
+        <div class="sec">
+          <div class="chead">
+            <h3>📅 Processioni <span id="cal-yr"></span></h3>
+            <div class="cnav">
+              <button onclick="cme(-1)">‹</button>
+              <span id="cal-ml"></span>
+              <button onclick="cme(1)">›</button>
             </div>
           </div>
-          <div class="cal-grid" id="cal-day-names"></div>
-          <div class="cal-grid" id="cal-grid"></div>
-          <div class="cal-eventi" id="cal-eventi"></div>
-          <div id="cal-admin-add" style="display:none">
-            <button class="btn btn-green btn-sm" onclick="apriModalEvento()">＋ Aggiungi processione</button>
+          <div class="cgrid" id="cal-dn"></div>
+          <div class="cgrid" style="margin-top:3px" id="cal-grid"></div>
+          <div class="evlist" id="cal-ev"></div>
+          <div id="cal-add-btn" style="display:none;margin-top:4px">
+            <button class="btn bg" onclick="apriEvento()">＋ Aggiungi processione</button>
           </div>
         </div>
       </div>
 
-    </div>
-  </div>
-</div>
+    </div><!-- /panel -->
+  </div><!-- /body -->
+</div><!-- /shell -->
 
 <!-- MODALE LOGIN -->
-<div class="modal-overlay" id="modal-login" style="display:none">
-  <div class="modal-box">
-    <div class="mhandle"></div>
+<div class="moverlay" id="m-login" style="display:none">
+  <div class="mbox">
+    <div class="mbar"></div>
     <h3>🔐 Accesso Organizzatori</h3>
-    <span class="flabel">Password</span>
-    <input id="login-pwd" type="password" placeholder="Inserisci la password" onkeydown="if(event.key==='Enter')tentaLogin()">
-    <div id="login-err">❌ Password errata</div>
-    <div class="modal-btns">
-      <button class="mb-no" onclick="chiudiM('modal-login')">Annulla</button>
-      <button class="mb-ok" onclick="tentaLogin()">Accedi</button>
-    </div>
-    <hr style="border:none;border-top:1px solid #f0f0f0;margin:14px 0">
-    <p style="font-size:11px;color:#888;margin-bottom:8px;font-weight:600">PRIMA VOLTA — Imposta la password:</p>
-    <input id="new-pwd" type="password" placeholder="Nuova password" style="margin-bottom:7px">
-    <input id="new-pwd2" type="password" placeholder="Conferma password">
-    <button onclick="impostaPassword()" class="btn btn-gray btn-sm" style="margin-top:9px">Imposta password</button>
+    <span class="fl">Password</span>
+    <input id="l-pwd" type="password" placeholder="Inserisci la password" onkeydown="if(event.key==='Enter')tryLogin()">
+    <div id="lerr">❌ Password errata</div>
+    <div class="mbtns"><button class="mno" onclick="chiudiM('m-login')">Annulla</button><button class="mok" onclick="tryLogin()">Accedi</button></div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+    <p style="font-size:12px;color:var(--txt3);font-weight:700;margin-bottom:9px">PRIMA VOLTA — Imposta la password:</p>
+    <input id="np1" type="password" placeholder="Nuova password" style="margin-bottom:8px">
+    <input id="np2" type="password" placeholder="Conferma password">
+    <button onclick="setPwd()" class="btn bgr" style="margin-top:10px;font-size:13px">Imposta password</button>
   </div>
 </div>
 
 <!-- MODALE NOME PERCORSO -->
-<div class="modal-overlay" id="modal-nome" style="display:none">
-  <div class="modal-box">
-    <div class="mhandle"></div>
+<div class="moverlay" id="m-nome" style="display:none">
+  <div class="mbox">
+    <div class="mbar"></div>
     <h3>💾 Nome percorso</h3>
-    <input id="nome-input" type="text" placeholder="Es: Processione San Giorgio 2025">
-    <div class="modal-btns">
-      <button class="mb-no" onclick="chiudiM('modal-nome')">Annulla</button>
-      <button class="mb-ok" onclick="salvaPercorsoConNome()">Salva</button>
-    </div>
+    <input id="n-nome" type="text" placeholder="Es: Processione San Giorgio 2025">
+    <div class="mbtns"><button class="mno" onclick="chiudiM('m-nome')">Annulla</button><button class="mok" onclick="salvaPercorso()">Salva</button></div>
   </div>
 </div>
 
 <!-- MODALE SANTO -->
-<div class="modal-overlay" id="modal-santo" style="display:none">
-  <div class="modal-box">
-    <div class="mhandle"></div>
+<div class="moverlay" id="m-santo" style="display:none">
+  <div class="mbox">
+    <div class="mbar"></div>
     <h3>✨ Configura il Santo</h3>
-    <span class="flabel">Nome del Santo</span>
-    <input id="santo-nome-input" type="text" placeholder="Es: San Giorgio, Madonna del Carmelo...">
-    <span class="flabel">Foto del Santo</span>
-    <div id="img-preview-area">
-      <div id="img-placeholder">🖼️</div>
-      <img id="img-preview" src="" alt="">
-      <div style="flex:1;font-size:11px;color:#666;line-height:1.5">Carica la foto — diventa l'icona sulla mappa
-        <button id="img-upload-btn" onclick="document.getElementById('foto-santo-input').click()">📷 Scegli foto</button>
-        <input type="file" id="foto-santo-input" accept="image/*" onchange="caricaFotoSanto(this)">
+    <span class="fl">Nome del Santo</span>
+    <input id="s-nome" type="text" placeholder="Es: San Giorgio, Madonna del Carmelo...">
+    <span class="fl">Foto del Santo</span>
+    <div id="fparea">
+      <div id="fp-ph">🖼️</div>
+      <img id="fp-img" src="" alt="">
+      <div style="flex:1;font-size:12px;color:var(--txt3);line-height:1.5">Carica la foto — diventa l'icona sulla mappa
+        <button id="fp-btn" onclick="document.getElementById('fs-input').click()">📷 Scegli foto</button>
+        <input type="file" id="fs-input" accept="image/*" onchange="caricaFS(this)">
       </div>
     </div>
-    <span class="flabel">Oppure emoji</span>
-    <div id="emoji-grid"></div>
-    <div class="modal-btns">
-      <button class="mb-no" onclick="chiudiM('modal-santo')">Annulla</button>
-      <button class="mb-ok" onclick="salvaSanto()">✅ Conferma</button>
-    </div>
+    <span class="fl">Oppure emoji</span>
+    <div class="egrid" id="egrid"></div>
+    <div class="mbtns"><button class="mno" onclick="chiudiM('m-santo')">Annulla</button><button class="mok" onclick="salvaSanto()">✅ Conferma</button></div>
   </div>
 </div>
 
 <!-- MODALE FOTO -->
-<div class="modal-overlay" id="modal-foto" style="display:none">
-  <div class="modal-box">
-    <div class="mhandle"></div>
+<div class="moverlay" id="m-foto" style="display:none">
+  <div class="mbox">
+    <div class="mbar"></div>
     <h3>📸 Pubblica foto in diretta</h3>
-    <p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.5">Apparirà sulla mappa nel punto esatto dove ti trovi — tutti la vedranno subito!</p>
-    <div id="foto-preview-area"><img id="foto-preview-img"></div>
-    <button class="foto-upload-btn" onclick="document.getElementById('foto-processione-input').click()">📷 Scatta / Scegli foto</button>
-    <input type="file" id="foto-processione-input" accept="image/*" capture="environment" onchange="previstaFoto(this)">
-    <span class="flabel">Didascalia (opzionale)</span>
-    <input id="foto-didascalia" type="text" placeholder="Es: Il Santo in Piazza Municipio!">
-    <div class="modal-btns">
-      <button class="mb-no" onclick="chiudiM('modal-foto')">Annulla</button>
-      <button class="mb-ok" id="pubblica-btn" onclick="pubblicaFoto()" disabled style="opacity:.5">📤 Pubblica</button>
-    </div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:13px;line-height:1.5">Apparirà sulla mappa nel punto esatto dove sei — tutti la vedranno subito!</p>
+    <div id="foto-prev"><img id="foto-prev-img"></div>
+    <button class="foto-upload" onclick="document.getElementById('fp-input').click()">📷 Scatta / Scegli foto</button>
+    <input type="file" id="fp-input" accept="image/*" capture="environment" onchange="previstaFoto(this)">
+    <span class="fl">Didascalia (opzionale)</span>
+    <input id="foto-did" type="text" placeholder="Es: Il Santo in Piazza Municipio!">
+    <div class="mbtns"><button class="mno" onclick="chiudiM('m-foto')">Annulla</button><button class="mok" id="pub-btn" onclick="pubblicaFoto()" disabled style="opacity:.5">📤 Pubblica</button></div>
   </div>
 </div>
 
-<!-- MODALE EVENTO CALENDARIO -->
-<div class="modal-overlay" id="modal-evento" style="display:none">
-  <div class="modal-box">
-    <div class="mhandle"></div>
-    <h3 id="modal-evento-title">📅 Aggiungi processione</h3>
-    <span class="flabel">Nome della processione</span>
+<!-- MODALE EVENTO -->
+<div class="moverlay" id="m-evento" style="display:none">
+  <div class="mbox">
+    <div class="mbar"></div>
+    <h3 id="m-ev-title">📅 Aggiungi processione</h3>
+    <span class="fl">Nome della processione</span>
     <input id="ev-nome" type="text" placeholder="Es: Processione di San Giorgio">
-    <span class="flabel">Santo / Emoji</span>
-    <input id="ev-emoji" type="text" placeholder="Es: 👑 o 🌹" style="font-size:22px;text-align:center">
-    <span class="flabel">Data</span>
+    <span class="fl">Emoji / Icona</span>
+    <input id="ev-emoji" type="text" placeholder="👑" style="font-size:24px;text-align:center">
+    <span class="fl">Data</span>
     <input id="ev-data" type="date">
-    <span class="flabel">Orario previsto partenza</span>
+    <span class="fl">Orario previsto partenza</span>
     <input id="ev-ora" type="time">
-    <span class="flabel">Percorso associato (opzionale)</span>
-    <select id="ev-percorso">
-      <option value="">-- Nessuno --</option>
-    </select>
-    <span class="flabel">Note (opzionale)</span>
-    <textarea id="ev-note" placeholder="Es: Raduno in Piazza del Popolo, abiti tradizionali..."></textarea>
-    <div class="modal-btns">
-      <button class="mb-no" onclick="chiudiM('modal-evento')">Annulla</button>
-      <button class="mb-ok" onclick="salvaEvento()">💾 Salva</button>
-    </div>
+    <span class="fl">Percorso associato</span>
+    <select id="ev-perc"></select>
+    <span class="fl">Note</span>
+    <textarea id="ev-note" placeholder="Es: Raduno in Piazza del Popolo..."></textarea>
+    <div class="mbtns"><button class="mno" onclick="chiudiM('m-evento')">Annulla</button><button class="mok" onclick="salvaEvento()">💾 Salva</button></div>
   </div>
 </div>
 
 <!-- LIGHTBOX -->
-<div id="lightbox" onclick="chiudiLightbox()">
-  <button id="lightbox-close" onclick="chiudiLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="">
-  <p id="lightbox-caption"></p>
+<div id="lb" onclick="chiudiLB()">
+  <button id="lb-x" onclick="chiudiLB()">✕</button>
+  <img id="lb-img" src="" alt="">
+  <p id="lb-cap"></p>
 </div>
 <div id="toast"></div>
 
 <script>
-const FB={
-  apiKey:"AIzaSyCjs4tdtWHlZKFwz5C9wlfBJmJzBh1z7xk",
-  authDomain:"saint-15ddd.firebaseapp.com",
-  databaseURL:"https://saint-15ddd-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId:"saint-15ddd",
-  storageBucket:"saint-15ddd.firebasestorage.app",
-  messagingSenderId:"835230906615",
-  appId:"1:835230906615:web:fcfe13a77564ff4d627bf2"
-};
+const FBC={apiKey:"AIzaSyCjs4tdtWHlZKFwz5C9wlfBJmJzBh1z7xk",authDomain:"saint-15ddd.firebaseapp.com",databaseURL:"https://saint-15ddd-default-rtdb.europe-west1.firebasedatabase.app",projectId:"saint-15ddd",storageBucket:"saint-15ddd.firebasestorage.app",messagingSenderId:"835230906615",appId:"1:835230906615:web:fcfe13a77564ff4d627bf2"};
 const EMOJIS=['👑','✝️','🕊️','⭐','🌹','🙏','⚜️','🕯️','🌟','💛','🔔','🏛️','⛪','🌺','🎺'];
-const GANGI={lat:37.7982,lng:14.2047};
 const MESI=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const GIORNI=['Lu','Ma','Me','Gi','Ve','Sa','Do'];
+const GANGI={lat:37.7982,lng:14.2047};
 
-let map,santoMarker,userMarker,routeLayer=null,drawLayer=null;
-let tracking=false,watchId=null,simInt=null,simStep=0;
-let santoPos=null,userPos=null,db=null;
-let disegnaMode=false,punti=[],puntiMk=[];
-let percorsi={},percorsoAttivo=null;
-let santoConf={nome:'',emoji:'👑',foto:null},santoTemp={};
-let loggedIn=false,fotoMk={},fotoB64=null;
-let eventi={},eventoEdit=null;
-let calMese=new Date().getMonth(),calAnno=new Date().getFullYear();
-let orarioPrevisto=null,orarioPartenza=null;
+let map,sMk=null,uMk=null,rLayer=null,dLayer=null;
+let tracking=false,wId=null,simInt=null,simStep=0;
+let sPos=null,uPos=null,db=null;
+let drawMode=false,punti=[],puntiMk=[];
+let percorsi={},percorsoAt=null;
+let sConf={nome:'',emoji:'👑',foto:null},sTemp={};
+let logged=false,fotoMk={},fotoB64=null;
+let eventi={},evEdit=null;
+let cMese=new Date().getMonth(),cAnno=new Date().getFullYear();
+let oPrevisto=null,oPartenza=null;
 
-// ── HASH ──
-async function hash(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
+// VH fix
+function fixVH(){document.documentElement.style.setProperty('--vh',window.innerHeight*.01+'px');}
+fixVH();window.addEventListener('resize',fixVH);
 
-function apriLogin(){document.getElementById('login-err').style.display='none';document.getElementById('login-pwd').value='';document.getElementById('modal-login').style.display='flex';setTimeout(()=>document.getElementById('login-pwd').focus(),300);}
+// HASH
+async function H(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
 
-async function tentaLogin(){
-  const p=document.getElementById('login-pwd').value;if(!p)return;
-  const h=await hash(p);
-  let stored=null;
-  if(db){const s=await db.ref('config/pwdHash').once('value');stored=s.val();}
-  if(!stored)stored=localStorage.getItem('gf_pwd');
-  if(!stored){showToast('Imposta prima una password!');return;}
-  if(h===stored){loggedIn=true;chiudiM('modal-login');document.getElementById('login-badge').textContent='✅ Org.';document.getElementById('login-badge').className='lb-in';mostraControlli(true);document.getElementById('cal-admin-add').style.display='';showToast('✅ Accesso effettuato!');}
-  else document.getElementById('login-err').style.display='';
+function apriLogin(){document.getElementById('lerr').style.display='none';document.getElementById('l-pwd').value='';document.getElementById('m-login').style.display='flex';setTimeout(()=>document.getElementById('l-pwd').focus(),350);}
+async function tryLogin(){
+  const p=document.getElementById('l-pwd').value;if(!p)return;
+  const h=await H(p);let st=null;
+  if(db){const s=await db.ref('config/pwdHash').once('value');st=s.val();}
+  if(!st)st=localStorage.getItem('dp_pwd');
+  if(!st){showToast('Imposta prima una password!');return;}
+  if(h===st){logged=true;chiudiM('m-login');document.getElementById('login-btn').textContent='✅ Org.';document.getElementById('login-btn').className='in';mostraCtrl(true);document.getElementById('cal-add-btn').style.display='';showToast('✅ Accesso effettuato!');}
+  else document.getElementById('lerr').style.display='';
 }
-async function impostaPassword(){
-  const p1=document.getElementById('new-pwd').value,p2=document.getElementById('new-pwd2').value;
-  if(!p1){showToast('Inserisci una password');return;}if(p1!==p2){showToast('Le password non coincidono!');return;}if(p1.length<4){showToast('Min 4 caratteri');return;}
-  const h=await hash(p1);localStorage.setItem('gf_pwd',h);if(db)await db.ref('config/pwdHash').set(h);
-  showToast('✅ Password impostata!');document.getElementById('new-pwd').value='';document.getElementById('new-pwd2').value='';
+async function setPwd(){
+  const p1=document.getElementById('np1').value,p2=document.getElementById('np2').value;
+  if(!p1){showToast('Inserisci password');return;}if(p1!==p2){showToast('Le password non coincidono!');return;}if(p1.length<4){showToast('Min 4 caratteri');return;}
+  const h=await H(p1);localStorage.setItem('dp_pwd',h);if(db)await db.ref('config/pwdHash').set(h);
+  showToast('✅ Password impostata!');document.getElementById('np1').value='';document.getElementById('np2').value='';
 }
-function mostraControlli(show){document.getElementById('not-logged-box').style.display=show?'none':'';document.getElementById('admin-controls').style.display=show?'':'none';}
+function mostraCtrl(s){document.getElementById('not-logged').style.display=s?'none':'';document.getElementById('adm-ctrl').style.display=s?'':'none';}
 
-// ── FIREBASE ──
+// FIREBASE
 function initFB(){
   try{
-    firebase.initializeApp(FB);db=firebase.database();
-    const b=document.getElementById('fb-badge');b.textContent='🔥 OK';b.style.background='#dcfce7';b.style.color='#166534';
-    db.ref('processione/santo').on('value',s=>{const d=s.val();d&&d.lat?mkSanto(d.lat,d.lng,d.t||''):(santoMarker&&(map.removeLayer(santoMarker),santoMarker=null));});
-    db.ref('processione/percorsoAttivo').on('value',s=>{const d=s.val();if(d&&d.coords&&d.coords.length>1&&!disegnaMode){disegnaRotta(d.coords);document.getElementById('route-badge').textContent='📍 '+d.nome;}});
-    db.ref('processione/santoConf').on('value',s=>{const d=s.val();if(d){santoConf=d;aggSantoUI();}});
-    db.ref('processione/foto').on('child_added',s=>{const f=s.val();if(f&&f.img)aggFoto(s.key,f);});
-    db.ref('processione/foto').on('child_removed',s=>rimFoto(s.key));
-    db.ref('eventi').on('value',s=>{eventi=s.val()||{};renderCalendario();});
-    caricaPercorsi();
-  }catch(e){document.getElementById('fb-badge').textContent='⚠️';}
+    firebase.initializeApp(FBC);db=firebase.database();
+    const d=document.getElementById('fb-dot');d.style.background='#22c55e';d.title='Firebase connesso';
+    db.ref('processione/santo').on('value',s=>{const d=s.val();d&&d.lat?posizioneS(d.lat,d.lng,d.t||''):(sMk&&(map.removeLayer(sMk),sMk=null));});
+    db.ref('processione/percorsoAttivo').on('value',s=>{const d=s.val();if(d&&d.coords&&d.coords.length>1&&!drawMode){disegnaR(d.coords);document.getElementById('route-chip').textContent='📍 '+d.nome;}});
+    db.ref('processione/santoConf').on('value',s=>{const d=s.val();if(d){sConf=d;aggiUI();}});
+    db.ref('processione/foto').on('child_added',s=>{const f=s.val();if(f&&f.img)addFoto(s.key,f);});
+    db.ref('processione/foto').on('child_removed',s=>rmFoto(s.key));
+    db.ref('eventi').on('value',s=>{eventi=s.val()||{};renderCal();});
+    db.ref('processione/orari').on('value',s=>{
+      const d=s.val();
+      if(d){
+        document.getElementById('orari-fedeli').style.display='';
+        document.getElementById('of-prev').textContent=d.previsto||'—';
+        document.getElementById('of-eff').textContent=d.effettivo||'—';
+        if(d.diff){document.getElementById('of-diff-row').style.display='';document.getElementById('of-diff').textContent=d.diff;document.getElementById('of-diff').className='of-val '+(d.diffPos?'ko':'ok');}
+      } else {document.getElementById('orari-fedeli').style.display='none';}
+    });
+    caricaP();
+  }catch(e){document.getElementById('fb-dot').style.background='#ef4444';}
 }
-function caricaPercorsi(){if(db)db.ref('percorsi').once('value',s=>{percorsi=s.val()||{};});}
+function caricaP(){if(db)db.ref('percorsi').once('value',s=>{percorsi=s.val()||{};});}
 
-// ── ICONE ──
-function mkSantoIcon(){
-  return santoConf.foto
-    ?L.divIcon({html:`<div style="width:46px;height:46px;border-radius:50%;border:3px solid #FFD700;overflow:hidden;box-shadow:0 3px 12px rgba(0,0,0,.5);background:white"><img src="${santoConf.foto}" style="width:100%;height:100%;object-fit:cover"></div>`,className:'',iconAnchor:[23,23],iconSize:[46,46]})
-    :L.divIcon({html:`<div style="background:#8B1A1A;border:3px solid #FFD700;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 3px 12px rgba(0,0,0,.5)">${santoConf.emoji||'👑'}</div>`,className:'',iconAnchor:[22,22],iconSize:[44,44]});
+// ICONE
+function mkSIcon(){
+  return sConf.foto
+    ?L.divIcon({html:`<div style="width:46px;height:46px;border-radius:50%;border:3px solid #FFD700;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.5)"><img src="${sConf.foto}" style="width:100%;height:100%;object-fit:cover"></div>`,className:'',iconAnchor:[23,23],iconSize:[46,46]})
+    :L.divIcon({html:`<div style="background:#8B1A1A;border:3px solid #FFD700;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 3px 14px rgba(0,0,0,.5)">${sConf.emoji||'👑'}</div>`,className:'',iconAnchor:[22,22],iconSize:[44,44]});
 }
-function mkFotoIcon(img){return L.divIcon({html:`<div style="width:44px;height:44px;border-radius:9px;border:3px solid #7c3aed;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer;background:white"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div>`,className:'',iconAnchor:[22,22],iconSize:[44,44]});}
-function mkPuntoIcon(n){return L.divIcon({html:`<div style="background:#8B1A1A;color:#FFD700;border:2px solid #FFD700;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;box-shadow:0 1px 5px rgba(0,0,0,.5)">${n}</div>`,className:'',iconAnchor:[11,11],iconSize:[22,22]});}
-const myIcon=L.divIcon({html:'<div style="background:#3b82f6;border:3px solid white;border-radius:50%;width:20px;height:20px;box-shadow:0 2px 8px rgba(0,0,0,.4)"></div>',className:'',iconAnchor:[10,10],iconSize:[20,20]});
+function mkFIcon(img){return L.divIcon({html:`<div style="width:44px;height:44px;border-radius:10px;border:3px solid #7c3aed;overflow:hidden;box-shadow:0 2px 9px rgba(0,0,0,.45);cursor:pointer"><img src="${img}" style="width:100%;height:100%;object-fit:cover"></div>`,className:'',iconAnchor:[22,22],iconSize:[44,44]});}
+function mkPIcon(n){return L.divIcon({html:`<div style="background:#8B1A1A;color:#FFD700;border:2px solid #FFD700;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;box-shadow:0 1px 6px rgba(0,0,0,.5)">${n}</div>`,className:'',iconAnchor:[11,11],iconSize:[22,22]});}
+const uIcon=L.divIcon({html:'<div style="background:#3b82f6;border:3px solid white;border-radius:50%;width:20px;height:20px;box-shadow:0 2px 9px rgba(0,0,0,.35)"></div>',className:'',iconAnchor:[10,10],iconSize:[20,20]});
 
-// ── MAPPA ──
+// MAPPA
 function initMap(){
-  map=L.map('map').setView([GANGI.lat,GANGI.lng],17);
+  map=L.map('map',{zoomControl:true,attributionControl:true}).setView([GANGI.lat,GANGI.lng],17);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:20}).addTo(map);
-  if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{userPos=[p.coords.latitude,p.coords.longitude];userMarker=L.marker(userPos,{icon:myIcon}).addTo(map);userMarker.bindTooltip('Tu sei qui');updateDist();},()=>{});
-  setTimeout(()=>map.invalidateSize(),300);
+  if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>{uPos=[p.coords.latitude,p.coords.longitude];uMk=L.marker(uPos,{icon:uIcon}).addTo(map);uMk.bindTooltip('Tu sei qui');updDist();},()=>{});
+  setTimeout(()=>map.invalidateSize(),400);
 }
-function disegnaRotta(coords){
-  if(routeLayer)map.removeLayer(routeLayer);
-  routeLayer=L.polyline(coords,{color:'#f59e0b',weight:6,opacity:.95}).addTo(map);
-  map.fitBounds(routeLayer.getBounds(),{padding:[50,50]});
+function disegnaR(coords){
+  if(rLayer)map.removeLayer(rLayer);
+  rLayer=L.polyline(coords,{color:'#f59e0b',weight:6,opacity:.95}).addTo(map);
+  map.fitBounds(rLayer.getBounds(),{padding:[55,55]});
 }
-function cancellaRotta(){if(routeLayer){map.removeLayer(routeLayer);routeLayer=null;}}
+function cancellaR(){if(rLayer){map.removeLayer(rLayer);rLayer=null;}}
 
-// ── FOTO ──
-function aggFoto(id,f){
+// FOTO
+function addFoto(id,f){
   if(fotoMk[id])return;
-  const m=L.marker([f.lat,f.lng],{icon:mkFotoIcon(f.img)}).addTo(map);
+  const m=L.marker([f.lat,f.lng],{icon:mkFIcon(f.img)}).addTo(map);
   const did=f.didascalia||'📸 Foto processione';
-  m.bindPopup(`<div class="foto-popup"><img src="${f.img}" onclick="apriLightbox('${f.img.replace(/'/g,"\\'")}','${did.replace(/'/g,"\\'")}')" style="cursor:pointer"><p>${did}</p><p style="font-size:10px;color:#aaa;margin-top:2px">${f.t||''}</p></div>`);
-  fotoMk[id]=m;
-  const cnt=Object.keys(fotoMk).length;
+  m.bindPopup(`<div class="foto-popup"><img src="${f.img}" onclick="apriLB('${f.img.replace(/'/g,"\\'")}','${did.replace(/'/g,"\\'")}')" style="cursor:pointer"><p>${did}</p><p style="font-size:10px;color:#aaa;margin-top:3px">${f.t||''}</p></div>`);
+  fotoMk[id]=m;const cnt=Object.keys(fotoMk).length;
   const b=document.getElementById('foto-cnt');b.textContent=cnt;b.style.display='flex';
 }
-function rimFoto(id){if(fotoMk[id]){map.removeLayer(fotoMk[id]);delete fotoMk[id];}}
-function apriLightbox(src,cap){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox-caption').textContent=cap||'';document.getElementById('lightbox').style.display='flex';}
-function chiudiLightbox(){document.getElementById('lightbox').style.display='none';}
-function apriScattaFoto(){fotoB64=null;document.getElementById('foto-preview-area').style.display='none';document.getElementById('foto-didascalia').value='';document.getElementById('pubblica-btn').disabled=true;document.getElementById('pubblica-btn').style.opacity='.5';document.getElementById('modal-foto').style.display='flex';}
+function rmFoto(id){if(fotoMk[id]){map.removeLayer(fotoMk[id]);delete fotoMk[id];}}
+function apriLB(src,cap){document.getElementById('lb-img').src=src;document.getElementById('lb-cap').textContent=cap||'';document.getElementById('lb').style.display='flex';}
+function chiudiLB(){document.getElementById('lb').style.display='none';}
+function apriFoto(){fotoB64=null;document.getElementById('foto-prev').style.display='none';document.getElementById('foto-did').value='';document.getElementById('pub-btn').disabled=true;document.getElementById('pub-btn').style.opacity='.5';document.getElementById('m-foto').style.display='flex';}
 function previstaFoto(input){
   const file=input.files[0];if(!file)return;
-  const proc=src=>{const c=document.createElement('canvas'),img=new Image();img.onload=()=>{let w=img.width,h=img.height,mx=900;if(w>mx||h>mx){if(w>h){h=h*mx/w;w=mx;}else{w=w*mx/h;h=mx;}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);fotoB64=c.toDataURL('image/jpeg',.78);mostraP(fotoB64);};img.src=src;};
+  const proc=src=>{const c=document.createElement('canvas'),img=new Image();img.onload=()=>{let w=img.width,h=img.height,mx=900;if(w>mx||h>mx){if(w>h){h=h*mx/w;w=mx;}else{w=w*mx/h;h=mx;}}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);fotoB64=c.toDataURL('image/jpeg',.78);document.getElementById('foto-prev-img').src=fotoB64;document.getElementById('foto-prev').style.display='';document.getElementById('pub-btn').disabled=false;document.getElementById('pub-btn').style.opacity='1';};img.src=src;};
   const r=new FileReader();r.onload=e=>proc(e.target.result);r.readAsDataURL(file);
 }
-function mostraP(src){document.getElementById('foto-preview-img').src=src;document.getElementById('foto-preview-area').style.display='';document.getElementById('pubblica-btn').disabled=false;document.getElementById('pubblica-btn').style.opacity='1';}
 async function pubblicaFoto(){
   if(!fotoB64){showToast('Scegli prima una foto!');return;}
-  let lat=santoPos?santoPos[0]:GANGI.lat,lng=santoPos?santoPos[1]:GANGI.lng;
+  let lat=sPos?sPos[0]:GANGI.lat,lng=sPos?sPos[1]:GANGI.lng;
   try{const p=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:3000}));lat=p.coords.latitude;lng=p.coords.longitude;}catch(e){}
-  const did=document.getElementById('foto-didascalia').value.trim();
+  const did=document.getElementById('foto-did').value.trim();
   if(db)db.ref('processione/foto/f_'+Date.now()).set({lat,lng,img:fotoB64,didascalia:did,t:new Date().toLocaleTimeString('it-IT'),ts:Date.now()});
-  chiudiM('modal-foto');showToast('📸 Foto pubblicata!');
+  chiudiM('m-foto');showToast('📸 Foto pubblicata!');
 }
 
-// ── SANTO ──
-function aggSantoUI(){
-  const n=santoConf.nome||'Il Santo';
-  document.getElementById('htitle').textContent=santoConf.nome?'🎉 '+santoConf.nome+' · Gangi in Festa':'🎉 Gangi in Festa';
-  document.getElementById('legend-nome').textContent=n;
-  document.getElementById('sb-nome').textContent=n;
-  document.getElementById('sb-sub').textContent=santoConf.foto?'Foto caricata ✓':'Emoji: '+santoConf.emoji;
-  if(santoConf.foto){document.getElementById('sb-img').src=santoConf.foto;document.getElementById('sb-img').style.display='';document.getElementById('sb-emoji').style.display='none';}
-  else{document.getElementById('sb-emoji').textContent=santoConf.emoji||'👑';document.getElementById('sb-emoji').style.display='flex';document.getElementById('sb-img').style.display='none';}
-  if(santoMarker)santoMarker.setIcon(mkSantoIcon());
+// SANTO
+function aggiUI(){
+  const n=sConf.nome||'Il Santo';
+  document.getElementById('app-title').textContent=sConf.nome?'🎉 '+sConf.nome:'🎉 Dunni Passa';
+  document.getElementById('leg-nome').textContent=n;
+  document.getElementById('sr-nome').textContent=n;
+  document.getElementById('sr-sub').textContent=sConf.foto?'Foto caricata ✓':'Emoji: '+sConf.emoji;
+  const vi=document.getElementById('sr-vis'),im=document.getElementById('sr-img');
+  if(sConf.foto){im.src=sConf.foto;im.style.display='block';vi.innerHTML='';vi.appendChild(im);}
+  else{im.style.display='none';vi.textContent=sConf.emoji||'👑';}
+  if(sMk)sMk.setIcon(mkSIcon());
 }
-function apriModalSanto(){
-  santoTemp={...santoConf};document.getElementById('santo-nome-input').value=santoConf.nome||'';
-  document.getElementById('emoji-grid').innerHTML=EMOJIS.map(e=>`<div onclick="selEmoji('${e}')" style="border-color:${santoConf.emoji===e&&!santoConf.foto?'#8B1A1A':'#e5e7eb'};background:${santoConf.emoji===e&&!santoConf.foto?'#fdf5f5':'white'}">${e}</div>`).join('');
-  if(santoConf.foto){document.getElementById('img-preview').src=santoConf.foto;document.getElementById('img-preview').style.display='';document.getElementById('img-placeholder').style.display='none';}
-  else{document.getElementById('img-preview').style.display='none';document.getElementById('img-placeholder').style.display='flex';}
-  document.getElementById('modal-santo').style.display='flex';
+function apriSanto(){
+  sTemp={...sConf};document.getElementById('s-nome').value=sConf.nome||'';
+  document.getElementById('egrid').innerHTML=EMOJIS.map(e=>`<div onclick="selE('${e}')" style="border-color:${sConf.emoji===e&&!sConf.foto?'#8B1A1A':'#ede8e0'};background:${sConf.emoji===e&&!sConf.foto?'#fdf5f5':'white'}">${e}</div>`).join('');
+  if(sConf.foto){document.getElementById('fp-img').src=sConf.foto;document.getElementById('fp-img').style.display='';document.getElementById('fp-ph').style.display='none';}
+  else{document.getElementById('fp-img').style.display='none';document.getElementById('fp-ph').style.display='flex';}
+  document.getElementById('m-santo').style.display='flex';
 }
-function selEmoji(e){santoTemp.emoji=e;santoTemp.foto=null;document.getElementById('img-preview').style.display='none';document.getElementById('img-placeholder').style.display='flex';document.querySelectorAll('#emoji-grid div').forEach(el=>{const s=el.textContent===e;el.style.borderColor=s?'#8B1A1A':'#e5e7eb';el.style.background=s?'#fdf5f5':'white';});}
-function caricaFotoSanto(input){const file=input.files[0];if(!file)return;if(file.size>500000){showToast('Max 500KB');return;}const r=new FileReader();r.onload=e=>{santoTemp.foto=e.target.result;document.getElementById('img-preview').src=e.target.result;document.getElementById('img-preview').style.display='';document.getElementById('img-placeholder').style.display='none';document.querySelectorAll('#emoji-grid div').forEach(el=>{el.style.borderColor='#e5e7eb';el.style.background='white';});};r.readAsDataURL(file);}
+function selE(e){sTemp.emoji=e;sTemp.foto=null;document.getElementById('fp-img').style.display='none';document.getElementById('fp-ph').style.display='flex';document.querySelectorAll('#egrid div').forEach(el=>{const s=el.textContent===e;el.style.borderColor=s?'#8B1A1A':'#ede8e0';el.style.background=s?'#fdf5f5':'white';});}
+function caricaFS(input){const file=input.files[0];if(!file)return;if(file.size>500000){showToast('Max 500KB');return;}const r=new FileReader();r.onload=e=>{sTemp.foto=e.target.result;document.getElementById('fp-img').src=e.target.result;document.getElementById('fp-img').style.display='';document.getElementById('fp-ph').style.display='none';document.querySelectorAll('#egrid div').forEach(el=>{el.style.borderColor='#ede8e0';el.style.background='white';});};r.readAsDataURL(file);}
 function salvaSanto(){
-  const n=document.getElementById('santo-nome-input').value.trim();if(!n){showToast('Scrivi il nome!');return;}
-  santoTemp.nome=n;santoConf={...santoTemp};chiudiM('modal-santo');aggSantoUI();
-  const cfg={nome:santoConf.nome,emoji:santoConf.emoji};if(santoConf.foto)cfg.foto=santoConf.foto;
+  const n=document.getElementById('s-nome').value.trim();if(!n){showToast('Scrivi il nome!');return;}
+  sTemp.nome=n;sConf={...sTemp};chiudiM('m-santo');aggiUI();
+  const cfg={nome:sConf.nome,emoji:sConf.emoji};if(sConf.foto)cfg.foto=sConf.foto;
   if(db)db.ref('processione/santoConf').set(cfg);showToast('✅ Santo configurato!');
 }
 
-// ── DISEGNO ──
+// DISEGNO
 function iniziaDisegno(){
-  switchTab('admin');disegnaMode=true;punti=[];
+  ST('adm');drawMode=true;punti=[];
   puntiMk.forEach(m=>map.removeLayer(m));puntiMk=[];
-  if(drawLayer){map.removeLayer(drawLayer);drawLayer=null;}
+  if(dLayer){map.removeLayer(dLayer);dLayer=null;}
   document.getElementById('draw-bar').style.display='flex';document.getElementById('zoom-hint').style.display='';
-  map.getContainer().style.cursor='crosshair';map.on('click',aggPunto);aggiornaBarra();
+  map.getContainer().style.cursor='crosshair';map.on('click',addP);aggB();
   map.setView([GANGI.lat,GANGI.lng],19);
 }
-function aggPunto(e){
+function addP(e){
   const ll=[e.latlng.lat,e.latlng.lng];punti.push(ll);
-  puntiMk.push(L.marker(ll,{icon:mkPuntoIcon(punti.length)}).addTo(map));
-  if(drawLayer)map.removeLayer(drawLayer);
-  if(punti.length>1)drawLayer=L.polyline(punti,{color:'#8B1A1A',weight:4,opacity:.9}).addTo(map);
-  aggiornaBarra();
+  puntiMk.push(L.marker(ll,{icon:mkPIcon(punti.length)}).addTo(map));
+  if(dLayer)map.removeLayer(dLayer);
+  if(punti.length>1)dLayer=L.polyline(punti,{color:'#8B1A1A',weight:4,opacity:.9}).addTo(map);
+  aggB();
 }
-function undoPunto(){if(!punti.length)return;punti.pop();const m=puntiMk.pop();if(m)map.removeLayer(m);if(drawLayer){map.removeLayer(drawLayer);drawLayer=null;}if(punti.length>1)drawLayer=L.polyline(punti,{color:'#8B1A1A',weight:4,opacity:.9}).addTo(map);aggiornaBarra();}
-function aggiornaBarra(){const n=punti.length;document.getElementById('draw-pts-count').textContent=n===0?'Tocca la mappa':n===1?'1 punto':n+' punti — 💾 Salva quando finisci';}
-function chiediNomeESalva(){if(punti.length<2){showToast('Almeno 2 punti!');return;}document.getElementById('nome-input').value='Processione '+(santoConf.nome||'')+' '+new Date().toLocaleDateString('it-IT');document.getElementById('modal-nome').style.display='flex';setTimeout(()=>document.getElementById('nome-input').select(),200);}
-function salvaPercorsoConNome(){
-  const n=document.getElementById('nome-input').value.trim();if(!n){showToast('Scrivi un nome!');return;}
-  chiudiM('modal-nome');const id='p_'+Date.now(),p={id,nome:n,coords:[...punti],punti:punti.length,creato:new Date().toLocaleDateString('it-IT')};
-  percorsi[id]=p;if(db)db.ref('percorsi/'+id).set(p);chiudiDisegno();attivaPercorso(p);showToast('✅ "'+n+'" salvato!');
+function undoP(){if(!punti.length)return;punti.pop();const m=puntiMk.pop();if(m)map.removeLayer(m);if(dLayer){map.removeLayer(dLayer);dLayer=null;}if(punti.length>1)dLayer=L.polyline(punti,{color:'#8B1A1A',weight:4,opacity:.9}).addTo(map);aggB();}
+function aggB(){const n=punti.length;document.getElementById('dbar-count').textContent=n===0?' Tocca la mappa':n===1?' 1 punto — continua':' '+n+' punti';}
+function chiediSalva(){if(punti.length<2){showToast('Almeno 2 punti!');return;}document.getElementById('n-nome').value='Processione '+(sConf.nome||'')+' '+new Date().toLocaleDateString('it-IT');document.getElementById('m-nome').style.display='flex';setTimeout(()=>document.getElementById('n-nome').select(),200);}
+function salvaPercorso(){
+  const n=document.getElementById('n-nome').value.trim();if(!n){showToast('Scrivi un nome!');return;}
+  chiudiM('m-nome');const id='p_'+Date.now(),p={id,nome:n,coords:[...punti],punti:punti.length,creato:new Date().toLocaleDateString('it-IT')};
+  percorsi[id]=p;if(db)db.ref('percorsi/'+id).set(p);chiudiDisegno();attivaP(p);showToast('✅ "'+n+'" salvato!');
 }
 function annullaDisegno(){chiudiDisegno();showToast('Annullato');}
-function chiudiDisegno(){disegnaMode=false;map.off('click',aggPunto);map.getContainer().style.cursor='';document.getElementById('draw-bar').style.display='none';document.getElementById('zoom-hint').style.display='none';puntiMk.forEach(m=>map.removeLayer(m));puntiMk=[];if(drawLayer){map.removeLayer(drawLayer);drawLayer=null;}punti=[];}
-function attivaPercorso(p){
-  percorsoAttivo=p;disegnaRotta(p.coords);document.getElementById('route-badge').textContent='📍 '+p.nome;
+function chiudiDisegno(){drawMode=false;map.off('click',addP);map.getContainer().style.cursor='';document.getElementById('draw-bar').style.display='none';document.getElementById('zoom-hint').style.display='none';puntiMk.forEach(m=>map.removeLayer(m));puntiMk=[];if(dLayer){map.removeLayer(dLayer);dLayer=null;}punti=[];}
+function attivaP(p){
+  percorsoAt=p;disegnaR(p.coords);document.getElementById('route-chip').textContent='📍 '+p.nome;
   if(db)db.ref('processione/percorsoAttivo').set({coords:p.coords,nome:p.nome,ts:Date.now()});
 }
 function apriListaPercorsi(){
-  caricaPercorsi();
-  setTimeout(()=>{
+  caricaP();setTimeout(()=>{
     const keys=Object.keys(percorsi);
-    document.getElementById('lista-content').innerHTML=keys.length===0
-      ?'<p style="color:#999;font-size:12px;text-align:center;padding:14px">Nessun percorso</p>'
-      :keys.map(k=>{const p=percorsi[k],att=percorsoAttivo&&percorsoAttivo.id===p.id;
-        return `<div class="percorso-item ${att?'attivo':''}"><div class="pi-info"><div class="pi-name">🗺️ ${p.nome}${att?' ✓':''}</div><div class="pi-meta">${p.punti||'?'} punti · ${p.creato||'—'}</div></div><div class="pi-actions"><button class="pi-btn pi-use" onclick="usaPercorso('${k}')">▶</button><button class="pi-btn pi-del" onclick="elimPercorso('${k}')">🗑️</button></div></div>`;
+    document.getElementById('lst-content').innerHTML=keys.length===0
+      ?'<p style="color:var(--txt3);font-size:13px;text-align:center;padding:14px">Nessun percorso salvato</p>'
+      :keys.map(k=>{const p=percorsi[k],att=percorsoAt&&percorsoAt.id===p.id;
+        return `<div class="pitem ${att?'on':''}"><div class="pi"><div class="pin">🗺️ ${p.nome}${att?' ✓':''}</div><div class="pim">${p.punti||'?'} punti · ${p.creato||'—'}</div></div><div class="pbtns"><button class="pbtn pu" onclick="usaP('${k}')">▶</button><button class="pbtn pdl" onclick="elimP('${k}')">🗑️</button></div></div>`;
       }).join('');
-    document.getElementById('admin-panel').style.display='none';document.getElementById('lista-panel').style.display='';
+    document.getElementById('adm-sec').style.display='none';document.getElementById('lst-sec').style.display='';
   },80);
 }
-function usaPercorso(id){const p=percorsi[id];if(!p)return;attivaPercorso(p);tornaAdmin();showToast('✅ "'+p.nome+'" attivato!');}
-function elimPercorso(id){
+function usaP(id){const p=percorsi[id];if(!p)return;attivaP(p);tornaAdm();showToast('✅ "'+p.nome+'" attivato!');}
+function elimP(id){
   const p=percorsi[id];if(!p||!confirm('Elimina "'+p.nome+'"?'))return;
   delete percorsi[id];if(db)db.ref('percorsi/'+id).remove();
-  if(percorsoAttivo&&percorsoAttivo.id===id){
-    percorsoAttivo=null;cancellaRotta();
-    if(db)db.ref('processione/percorsoAttivo').remove();
-    document.getElementById('route-badge').textContent='Nessun percorso selezionato';
-  }
+  if(percorsoAt&&percorsoAt.id===id){percorsoAt=null;cancellaR();if(db)db.ref('processione/percorsoAttivo').remove();document.getElementById('route-chip').textContent='Nessun percorso selezionato';}
   apriListaPercorsi();
 }
-function tornaAdmin(){document.getElementById('lista-panel').style.display='none';document.getElementById('admin-panel').style.display='';}
+function tornaAdm(){document.getElementById('lst-sec').style.display='none';document.getElementById('adm-sec').style.display='';}
 
-// ── TRACKING ──
-function mkSanto(lat,lng,t){
-  santoPos=[lat,lng];const ora=t||new Date().toLocaleTimeString('it-IT'),n=santoConf.nome||'Il Santo';
-  if(!santoMarker)santoMarker=L.marker(santoPos,{icon:mkSantoIcon()}).addTo(map);
-  else{santoMarker.setLatLng(santoPos);santoMarker.setIcon(mkSantoIcon());}
-  santoMarker.bindPopup(`<b style="color:#8B1A1A">${n} è qui!</b><br><small style="color:#888">${ora}</small>`);
-  document.getElementById('pub-dot').classList.add('live');
+// TRACKING
+function posizioneS(lat,lng,t){
+  sPos=[lat,lng];const ora=t||new Date().toLocaleTimeString('it-IT'),n=sConf.nome||'Il Santo';
+  if(!sMk)sMk=L.marker(sPos,{icon:mkSIcon()}).addTo(map);
+  else{sMk.setLatLng(sPos);sMk.setIcon(mkSIcon());}
+  sMk.bindPopup(`<b style="color:#8B1A1A">${n} è qui!</b><br><small style="color:#888">${ora}</small>`);
+  document.getElementById('sdot').classList.add('live');
   document.getElementById('status-text').textContent=n+' in processione · '+ora;
-  document.getElementById('live-badge').style.display='flex';
-  updateDist();map.panTo(santoPos);
+  document.getElementById('live-pill').style.display='flex';
+  updDist();map.panTo(sPos);
 }
-function toggleTracking(){tracking?stopTracking():startTracking();}
-function startTracking(){
-  if(!percorsoAttivo){showToast('⚠️ Seleziona prima un percorso!');return;}
-  tracking=true;orarioPartenza=new Date();
-  document.getElementById('admin-stato').textContent='🟢 Attivo';
-  document.getElementById('tracking-btn').textContent='⏹ Ferma Tracking';
-  document.getElementById('tracking-btn').className='btn btn-danger';
-  document.getElementById('foto-live-btn').style.display='flex';
+function toggleTracking(){tracking?stopT():startT();}
+function startT(){
+  if(!percorsoAt){showToast('⚠️ Seleziona prima un percorso!');return;}
+  tracking=true;oPartenza=new Date();
+  document.getElementById('a-stato').textContent='🟢 Attivo';
+  document.getElementById('trk-btn').textContent='⏹ Ferma Tracking';
+  document.getElementById('trk-btn').className='btn bd';
+  document.getElementById('foto-btn-wrap').style.display='';
   document.getElementById('share-box').style.display='';
-  document.getElementById('qr-img').src='https://api.qrserver.com/v1/create-qr-code/?size=115x115&data='+encodeURIComponent(window.location.href);
-  // Orari
-  aggOrariUI();
+  document.getElementById('qr-img').src='https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='+encodeURIComponent(window.location.href);
+  aggOrari();
   if(navigator.geolocation){
-    watchId=navigator.geolocation.watchPosition(p=>{
+    wId=navigator.geolocation.watchPosition(p=>{
       const lat=p.coords.latitude,lng=p.coords.longitude,t=new Date().toLocaleTimeString('it-IT');
-      document.getElementById('admin-pos').textContent=lat.toFixed(5)+' '+lng.toFixed(5);
-      document.getElementById('admin-time').textContent=t;
+      document.getElementById('a-pos').textContent=lat.toFixed(5)+' '+lng.toFixed(5);
+      document.getElementById('a-time').textContent=t;
       if(db)db.ref('processione/santo').set({lat,lng,t,ts:Date.now()});
-      mkSanto(lat,lng,t);
-    },()=>avviaSimulazione(),{enableHighAccuracy:true,maximumAge:3000});
-  } else avviaSimulazione();
+      posizioneS(lat,lng,t);
+    },()=>avvioSim(),{enableHighAccuracy:true,maximumAge:3000});
+  } else avvioSim();
   showToast('🎉 Tracking avviato!');
 }
-function aggOrariUI(){
-  const box=document.getElementById('orari-box');box.style.display='';
-  const effStr=orarioPartenza?orarioPartenza.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'—';
-  document.getElementById('orario-effettivo').textContent=effStr;
+function aggOrari(){
+  document.getElementById('orari-admin').style.display='';
+  const effStr=oPartenza.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('oa-eff').textContent=effStr;
   // Cerca orario previsto dall'evento di oggi
   const oggi=new Date().toISOString().split('T')[0];
-  let previsto=null;
-  Object.values(eventi).forEach(ev=>{if(ev.data===oggi)previsto=ev.ora;});
-  orarioPrevisto=previsto;
-  document.getElementById('orario-previsto').textContent=previsto||'Non impostato';
-  if(previsto&&orarioPartenza){
-    const [ph,pm]=previsto.split(':').map(Number);
-    const prev=new Date(orarioPartenza);prev.setHours(ph,pm,0);
-    const diffMs=orarioPartenza-prev;const diffMin=Math.round(diffMs/60000);
-    if(Math.abs(diffMin)>1){
-      document.getElementById('ritardo-row').style.display='';
-      document.getElementById('orario-diff').textContent=diffMin>0?'+'+diffMin+' min (ritardo)':diffMin+' min (anticipo)';
-      document.getElementById('orario-diff').className='orari-val '+(diffMin>0?'ritardo':'effettivo');
+  let prev=null;Object.values(eventi).forEach(ev=>{if(ev.data===oggi)prev=ev.ora;});
+  oPrevisto=prev;
+  document.getElementById('oa-prev').textContent=prev||'Non impostato';
+  let diffStr=null,diffPos=false;
+  if(prev){
+    const[ph,pm]=prev.split(':').map(Number);const pDate=new Date(oPartenza);pDate.setHours(ph,pm,0);
+    const dMin=Math.round((oPartenza-pDate)/60000);
+    if(Math.abs(dMin)>1){
+      diffStr=(dMin>0?'+':'')+dMin+' min '+(dMin>0?'(ritardo)':'(anticipo)');
+      diffPos=dMin>0;
+      document.getElementById('oa-diff-row').style.display='';
+      document.getElementById('oa-diff').textContent=diffStr;
+      document.getElementById('oa-diff').className='oa-val '+(diffPos?'ko':'ok');
     }
   }
-  // Sincronizza su Firebase per i fedeli
-  if(db)db.ref('processione/orari').set({previsto:orarioPrevisto,effettivo:effStr,ts:Date.now()});
+  if(db)db.ref('processione/orari').set({previsto:prev||'—',effettivo:effStr,diff:diffStr,diffPos,ts:Date.now()});
 }
-function avviaSimulazione(){
-  const pts=percorsoAttivo?.coords?.length>1?percorsoAttivo.coords:[[37.7982,14.2047],[37.7988,14.2053],[37.7995,14.2058],[37.8001,14.2050],[37.7996,14.2041],[37.7988,14.2038],[37.7982,14.2047]];
-  simStep=0;simInt=setInterval(()=>{const p=pts[simStep%pts.length],j=()=>(Math.random()-.5)*.00005;const lat=p[0]+j(),lng=p[1]+j(),t=new Date().toLocaleTimeString('it-IT');document.getElementById('admin-pos').textContent=lat.toFixed(5)+' '+lng.toFixed(5);document.getElementById('admin-time').textContent=t;if(db)db.ref('processione/santo').set({lat,lng,t,ts:Date.now()});mkSanto(lat,lng,t);simStep++;},3000);
+function avvioSim(){
+  const pts=percorsoAt?.coords?.length>1?percorsoAt.coords:[[37.7982,14.2047],[37.7988,14.2053],[37.7995,14.2058],[37.8001,14.2050],[37.7996,14.2041],[37.7988,14.2038],[37.7982,14.2047]];
+  simStep=0;simInt=setInterval(()=>{const p=pts[simStep%pts.length],j=()=>(Math.random()-.5)*.00005;const lat=p[0]+j(),lng=p[1]+j(),t=new Date().toLocaleTimeString('it-IT');document.getElementById('a-pos').textContent=lat.toFixed(5)+' '+lng.toFixed(5);document.getElementById('a-time').textContent=t;if(db)db.ref('processione/santo').set({lat,lng,t,ts:Date.now()});posizioneS(lat,lng,t);simStep++;},3000);
 }
-function stopTracking(){
-  tracking=false;orarioPartenza=null;orarioPrevisto=null;
-  if(watchId)navigator.geolocation.clearWatch(watchId);if(simInt)clearInterval(simInt);
-  document.getElementById('admin-stato').textContent='⚫ Inattivo';
-  document.getElementById('tracking-btn').textContent='▶ Avvia Tracking';
-  document.getElementById('tracking-btn').className='btn btn-primary';
-  document.getElementById('live-badge').style.display='none';
-  document.getElementById('foto-live-btn').style.display='none';
+function stopT(){
+  tracking=false;oPartenza=null;oPrevisto=null;
+  if(wId)navigator.geolocation.clearWatch(wId);if(simInt)clearInterval(simInt);
+  document.getElementById('a-stato').textContent='⚫ Inattivo';
+  document.getElementById('trk-btn').textContent='▶ Avvia Tracking';
+  document.getElementById('trk-btn').className='btn bp';
+  document.getElementById('live-pill').style.display='none';
+  document.getElementById('foto-btn-wrap').style.display='none';
   document.getElementById('share-box').style.display='none';
   document.getElementById('foto-cnt').style.display='none';
-  document.getElementById('orari-box').style.display='none';
-  document.getElementById('ritardo-row').style.display='none';
+  document.getElementById('orari-admin').style.display='none';
+  document.getElementById('orari-fedeli').style.display='none';
   if(db){db.ref('processione/santo').remove();db.ref('processione/foto').remove();db.ref('processione/orari').remove();}
   Object.values(fotoMk).forEach(m=>map.removeLayer(m));fotoMk={};
   showToast('Tracking fermato.');
 }
-function updateDist(){
-  if(!santoPos||!userPos)return;
-  const d=getDist(userPos[0],userPos[1],santoPos[0],santoPos[1]),n=santoConf.nome||'Il Santo';
-  const el=document.getElementById('distance-info');el.style.display='';
+function updDist(){
+  if(!sPos||!uPos)return;
+  const d=gDist(uPos[0],uPos[1],sPos[0],sPos[1]),n=sConf.nome||'Il Santo';
+  const el=document.getElementById('dist-box');el.style.display='';
   if(d<50){el.textContent='🎉 '+n+' è vicinissimo!';el.style.color='#16a34a';}
   else if(d<300){el.textContent='📍 '+n+' è a '+Math.round(d)+' m';el.style.color='#d97706';}
   else{el.textContent='🚶 '+n+' è a ~'+Math.round(d)+' m (~'+Math.round(d/60)+' min)';el.style.color='#8B1A1A';}
 }
-function getDist(a,b,c,d){const R=6371000,dL=(c-a)*Math.PI/180,dO=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function gDist(a,b,c,d){const R=6371000,dL=(c-a)*Math.PI/180,dO=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
 
-// ── CALENDARIO ──
-function renderCalendario(){
-  document.getElementById('cal-year').textContent=calAnno;
-  document.getElementById('cal-month-label').textContent=MESI[calMese];
-  // Nomi giorni
-  const dn=document.getElementById('cal-day-names');
-  dn.innerHTML=GIORNI.map(g=>`<div class="cal-day-name">${g}</div>`).join('');
-  // Griglia
-  const prima=new Date(calAnno,calMese,1);
-  const ultima=new Date(calAnno,calMese+1,0);
-  const startDow=(prima.getDay()+6)%7; // Lunedì=0
-  const oggi=new Date();const oggiStr=oggi.toISOString().split('T')[0];
-  // Giorni con eventi
-  const giorniConEventi={};
-  Object.values(eventi).forEach(ev=>{
-    const d=new Date(ev.data+'T00:00:00');
-    if(d.getFullYear()===calAnno&&d.getMonth()===calMese) giorniConEventi[d.getDate()]=true;
-  });
-  let html='';
-  // Giorni mese precedente
-  const prevUlt=new Date(calAnno,calMese,0).getDate();
-  for(let i=startDow-1;i>=0;i--){
-    html+=`<div class="cal-day other-month"><div class="dn">${prevUlt-i}</div></div>`;
-  }
-  // Giorni mese corrente
-  for(let d=1;d<=ultima.getDate();d++){
-    const dateStr=`${calAnno}-${String(calMese+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isOggi=dateStr===oggiStr;const hasEv=giorniConEventi[d];
-    html+=`<div class="cal-day ${isOggi?'today':''} ${hasEv?'has-event':''}" onclick="filtraEventi('${dateStr}')">
-      <div class="dn">${d}</div>${hasEv?'<div class="cal-dot"></div>':''}
-    </div>`;
-  }
-  // Giorni mese successivo
-  const totCelle=Math.ceil((startDow+ultima.getDate())/7)*7;
-  let nextD=1;
-  for(let i=startDow+ultima.getDate();i<totCelle;i++){
-    html+=`<div class="cal-day other-month"><div class="dn">${nextD++}</div></div>`;
-  }
-  document.getElementById('cal-grid').innerHTML=html;
-  mostraEventiMese();
-}
-function mostraEventiMese(filtroData=null){
-  const evMese=Object.entries(eventi).filter(([id,ev])=>{
-    const d=new Date(ev.data+'T00:00:00');
-    const ok=d.getFullYear()===calAnno&&d.getMonth()===calMese;
-    return filtroData?ok&&ev.data===filtroData:ok;
-  }).sort((a,b)=>a[1].data.localeCompare(b[1].data));
+// CALENDARIO
+function renderCal(){
+  document.getElementById('cal-yr').textContent=cAnno;
+  document.getElementById('cal-ml').textContent=MESI[cMese];
+  document.getElementById('cal-dn').innerHTML=GIORNI.map(g=>`<div class="cdn">${g}</div>`).join('');
+  const prima=new Date(cAnno,cMese,1),ultima=new Date(cAnno,cMese+1,0);
+  const start=(prima.getDay()+6)%7;
   const oggi=new Date().toISOString().split('T')[0];
-  if(evMese.length===0){
-    document.getElementById('cal-eventi').innerHTML=`<p style="color:#999;font-size:12px;text-align:center;padding:12px 0">${filtroData?'Nessuna processione in questo giorno':'Nessuna processione questo mese'}</p>`;
-    return;
+  const gEv={};Object.values(eventi).forEach(ev=>{const d=new Date(ev.data+'T00:00:00');if(d.getFullYear()===cAnno&&d.getMonth()===cMese)gEv[d.getDate()]=true;});
+  let h='';
+  const pu=new Date(cAnno,cMese,0).getDate();
+  for(let i=start-1;i>=0;i--)h+=`<div class="cd om"><div class="dn">${pu-i}</div></div>`;
+  for(let day=1;day<=ultima.getDate();day++){
+    const ds=`${cAnno}-${String(cMese+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isOggi=ds===oggi,hasEv=gEv[day];
+    h+=`<div class="cd ${isOggi?'tod':''} ${hasEv?'hev':''}" onclick="mostraEvGiorno('${ds}')"><div class="dn">${day}</div>${hasEv?'<div class="cdot"></div>':''}</div>`;
   }
-  document.getElementById('cal-eventi').innerHTML=evMese.map(([id,ev])=>{
+  const tot=Math.ceil((start+ultima.getDate())/7)*7;let nd=1;
+  for(let i=start+ultima.getDate();i<tot;i++)h+=`<div class="cd om"><div class="dn">${nd++}</div></div>`;
+  document.getElementById('cal-grid').innerHTML=h;
+  mostraEvMese();
+}
+function mostraEvMese(filtro=null){
+  const oggi=new Date().toISOString().split('T')[0];
+  const lista=Object.entries(eventi).filter(([id,ev])=>{
+    const d=new Date(ev.data+'T00:00:00');
+    const ok=d.getFullYear()===cAnno&&d.getMonth()===cMese;
+    return filtro?ok&&ev.data===filtro:ok;
+  }).sort((a,b)=>a[1].data.localeCompare(b[1].data));
+  if(!lista.length){document.getElementById('cal-ev').innerHTML=`<p style="color:var(--txt3);font-size:13px;text-align:center;padding:14px 0">${filtro?'Nessuna processione in questo giorno':'Nessuna processione questo mese'}</p>`;return;}
+  document.getElementById('cal-ev').innerHTML=lista.map(([id,ev])=>{
     const isOggi=ev.data===oggi;
-    const dataFmt=new Date(ev.data+'T00:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
-    let orariHtml='';
-    if(ev.ora)orariHtml+=`<span class="cec-orario cec-previsto">⏰ Prevista: ${ev.ora}</span>`;
-    if(ev.orarioEffettivo)orariHtml+=`<span class="cec-orario cec-effettivo">✅ Partita: ${ev.orarioEffettivo}</span>`;
-    const actHtml=loggedIn?`<div class="cec-actions">
-      <button class="cec-btn cec-attiva" onclick="attivaEvento('${id}')">▶ Attiva</button>
-      <button class="cec-btn cec-edit" onclick="modificaEvento('${id}')">✏️</button>
-      <button class="cec-btn cec-del" onclick="eliminaEvento('${id}')">🗑️</button>
-    </div>`:'';
-    return `<div class="cal-evento-card ${isOggi?'oggi':''}">
-      <div class="cec-top">
-        <div class="cec-emoji">${ev.emoji||'👑'}</div>
-        <div class="cec-info">
-          <div class="cec-nome">${ev.nome}</div>
-          <div class="cec-data">${dataFmt}${ev.note?'<br><span style="color:#888">'+ev.note+'</span>':''}</div>
-          <div class="cec-orari">${orariHtml}</div>
-        </div>
-      </div>
-      ${actHtml}
-    </div>`;
+    const df=new Date(ev.data+'T00:00:00').toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+    let tags='';
+    if(ev.ora)tags+=`<span class="evtag et-prev">⏰ ${ev.ora}</span>`;
+    if(ev.orarioEffettivo)tags+=`<span class="evtag et-eff">✅ Partita: ${ev.orarioEffettivo}</span>`;
+    const acts=logged?`<div class="evacts"><button class="eact ea-att" onclick="attivaEv('${id}')">▶ Attiva</button><button class="eact ea-ed" onclick="modificaEv('${id}')">✏️</button><button class="eact ea-del" onclick="eliminaEv('${id}')">🗑️</button></div>`:'';
+    return `<div class="evcard ${isOggi?'oggi':''}"><div class="evtop"><div class="evem">${ev.emoji||'👑'}</div><div class="evinfo"><div class="evnome">${ev.nome}</div><div class="evdata">${df}${ev.note?'<br><span style="opacity:.7">'+ev.note+'</span>':''}</div><div class="evtags">${tags}</div></div></div>${acts}</div>`;
   }).join('');
 }
-function filtraEventi(data){mostraEventiMese(data);}
-function cambiaMe(d){calMese+=d;if(calMese>11){calMese=0;calAnno++;}else if(calMese<0){calMese=11;calAnno--;}renderCalendario();}
-
-function apriModalEvento(id=null){
-  eventoEdit=id;
-  document.getElementById('modal-evento-title').textContent=id?'✏️ Modifica processione':'📅 Aggiungi processione';
-  // Popola select percorsi
-  const sel=document.getElementById('ev-percorso');
+function mostraEvGiorno(data){mostraEvMese(data);}
+function cme(d){cMese+=d;if(cMese>11){cMese=0;cAnno++;}else if(cMese<0){cMese=11;cAnno--;}renderCal();}
+function apriEvento(id=null){
+  evEdit=id;
+  document.getElementById('m-ev-title').textContent=id?'✏️ Modifica processione':'📅 Aggiungi processione';
+  const sel=document.getElementById('ev-perc');
   sel.innerHTML='<option value="">-- Nessuno --</option>'+Object.values(percorsi).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
-  if(id&&eventi[id]){
-    const ev=eventi[id];
-    document.getElementById('ev-nome').value=ev.nome||'';
-    document.getElementById('ev-emoji').value=ev.emoji||'👑';
-    document.getElementById('ev-data').value=ev.data||'';
-    document.getElementById('ev-ora').value=ev.ora||'';
-    document.getElementById('ev-note').value=ev.note||'';
-    sel.value=ev.percorsoId||'';
-  } else {
-    document.getElementById('ev-nome').value='';
-    document.getElementById('ev-emoji').value='👑';
-    document.getElementById('ev-data').value=new Date().toISOString().split('T')[0];
-    document.getElementById('ev-ora').value='';
-    document.getElementById('ev-note').value='';
-    sel.value='';
-  }
-  document.getElementById('modal-evento').style.display='flex';
+  if(id&&eventi[id]){const ev=eventi[id];document.getElementById('ev-nome').value=ev.nome||'';document.getElementById('ev-emoji').value=ev.emoji||'👑';document.getElementById('ev-data').value=ev.data||'';document.getElementById('ev-ora').value=ev.ora||'';document.getElementById('ev-note').value=ev.note||'';sel.value=ev.percorsoId||'';}
+  else{document.getElementById('ev-nome').value='';document.getElementById('ev-emoji').value='👑';document.getElementById('ev-data').value=new Date().toISOString().split('T')[0];document.getElementById('ev-ora').value='';document.getElementById('ev-note').value='';sel.value='';}
+  document.getElementById('m-evento').style.display='flex';
 }
 function salvaEvento(){
-  const nome=document.getElementById('ev-nome').value.trim();
-  const data=document.getElementById('ev-data').value;
+  const nome=document.getElementById('ev-nome').value.trim(),data=document.getElementById('ev-data').value;
   if(!nome||!data){showToast('Compila nome e data!');return;}
-  const ev={
-    nome,emoji:document.getElementById('ev-emoji').value||'👑',
-    data,ora:document.getElementById('ev-ora').value,
-    note:document.getElementById('ev-note').value.trim(),
-    percorsoId:document.getElementById('ev-percorso').value||''
-  };
-  const id=eventoEdit||'ev_'+Date.now();
-  eventi[id]=ev;if(db)db.ref('eventi/'+id).set(ev);
-  chiudiM('modal-evento');renderCalendario();
-  showToast(eventoEdit?'✅ Processione aggiornata!':'✅ Processione aggiunta!');
+  const ev={nome,emoji:document.getElementById('ev-emoji').value||'👑',data,ora:document.getElementById('ev-ora').value,note:document.getElementById('ev-note').value.trim(),percorsoId:document.getElementById('ev-perc').value||''};
+  const id=evEdit||'ev_'+Date.now();eventi[id]=ev;if(db)db.ref('eventi/'+id).set(ev);
+  chiudiM('m-evento');renderCal();showToast(evEdit?'✅ Aggiornato!':'✅ Processione aggiunta!');
 }
-function modificaEvento(id){apriModalEvento(id);}
-function eliminaEvento(id){
-  if(!confirm('Elimina questa processione?'))return;
-  delete eventi[id];if(db)db.ref('eventi/'+id).remove();
-  renderCalendario();showToast('Eliminato.');
-}
-function attivaEvento(id){
+function modificaEv(id){apriEvento(id);}
+function eliminaEv(id){if(!confirm('Elimina?'))return;delete eventi[id];if(db)db.ref('eventi/'+id).remove();renderCal();}
+function attivaEv(id){
   const ev=eventi[id];if(!ev)return;
-  // Imposta santo e percorso dall'evento
-  if(ev.emoji){santoConf.emoji=ev.emoji;aggSantoUI();}
-  if(ev.percorsoId&&percorsi[ev.percorsoId]){attivaPercorso(percorsi[ev.percorsoId]);}
-  switchTab('admin');
-  showToast('✅ Evento attivato! Ora puoi avviare il tracking.');
+  if(ev.emoji){sConf.emoji=ev.emoji;aggiUI();}
+  if(ev.percorsoId&&percorsi[ev.percorsoId])attivaP(percorsi[ev.percorsoId]);
+  ST('adm');showToast('✅ Evento attivato! Avvia il tracking quando sei pronto.');
 }
 
-// ── UI ──
+// UI
 function copiaLink(){navigator.clipboard.writeText(window.location.href).then(()=>showToast('Link copiato!')).catch(()=>showToast(window.location.href));}
 function chiudiM(id){document.getElementById(id).style.display='none';}
-function switchTab(tab){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',(['pubblico','admin','calendario'][i])===tab));
-  document.getElementById('pubblico-panel').style.display=tab==='pubblico'?'':'none';
-  document.getElementById('cal-panel').style.display=tab==='calendario'?'':'none';
-  if(tab==='admin'){
-    const lista=document.getElementById('lista-panel').style.display!=='none';
-    document.getElementById('admin-panel').style.display=lista?'none':'';
-    document.getElementById('lista-panel').style.display=lista?'':'none';
-    if(!loggedIn)mostraControlli(false);
-  } else {
-    document.getElementById('admin-panel').style.display='none';
-    document.getElementById('lista-panel').style.display='none';
-  }
-  if(tab==='calendario')renderCalendario();
-  if(map)setTimeout(()=>map.invalidateSize(),100);
+function ST(tab){
+  const tabs=['pub','adm','cal'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===tab));
+  document.getElementById('pub-sec').style.display=tab==='pub'?'':'none';
+  document.getElementById('cal-wrap').style.display=tab==='cal'?'':'none';
+  if(tab==='adm'){
+    const lst=document.getElementById('lst-sec').style.display!=='none';
+    document.getElementById('adm-sec').style.display=lst?'none':'';
+    document.getElementById('lst-sec').style.display=lst?'':'none';
+    if(!logged)mostraCtrl(false);
+  } else {document.getElementById('adm-sec').style.display='none';document.getElementById('lst-sec').style.display='none';}
+  if(tab==='cal')renderCal();
+  if(map)setTimeout(()=>map.invalidateSize(),150);
 }
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3500);}
-window.addEventListener('resize',()=>{document.getElementById('app').style.height=window.innerHeight+'px';if(map)map.invalidateSize();});
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',3200);}
+
 window.addEventListener('load',()=>{
-  initFB();initMap();mostraControlli(false);
-  document.getElementById('app').style.height=window.innerHeight+'px';
-  // Ascolta orari da Firebase per i fedeli
-  if(typeof firebase!=='undefined'&&firebase.apps.length){
-    firebase.database().ref('processione/orari').on('value',s=>{
-      const d=s.val();
-      if(d){
-        // Mostra orari anche ai fedeli nel pannello
-        const st=document.getElementById('status-text');
-        if(d.effettivo&&d.previsto) st.textContent=`In processione · Prevista: ${d.previsto} · Partita: ${d.effettivo}`;
-      }
-    });
-  }
+  fixVH();initFB();initMap();mostraCtrl(false);
 });
+window.addEventListener('resize',()=>{fixVH();if(map)map.invalidateSize();});
 </script>
 </body>
 </html>
